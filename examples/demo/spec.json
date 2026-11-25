@@ -1,0 +1,55 @@
+{
+  "title": "ほうきの空",
+  "size": "B5",
+  "direction": "rtl",
+  "defaults": { "bubble": { "font": "antique" } },
+  "pages": [
+    {
+      "layout": "basic-5",
+      "panels": [
+        {
+          "image": { "src": "sky.jpg", "zoom": 1.15, "focus": [0.5, 0.4] },
+          "texts": [{ "text": "ある晴れた\n日のこと――", "at": "top-right", "font": "mincho", "bold": false, "scale": 0.8, "background": "#ffffff" }]
+        },
+        {
+          "image": "person.jpg",
+          "bubbles": [{ "text": "今日こそ\n飛べる\n気がする！", "at": [0.28, 0.3], "tail": { "to": [0.52, 0.42] } }]
+        },
+        {
+          "image": { "src": "hills.jpg", "mode": "halftone", "dot": 9 },
+          "effects": [{ "kind": "speed", "angle": -12, "count": 70 }],
+          "sfx": [{ "text": "ビュンッ", "at": [0.3, 0.5], "rotate": -12 }],
+          "bubbles": [{ "text": "わああ\nああっ!!", "shape": "spike", "at": [0.8, 0.42], "tail": "down-left" }]
+        },
+        {
+          "effects": [{ "kind": "focus", "center": [0.5, 0.55] }],
+          "bubbles": [{ "text": "ねこ!?", "shape": "burst", "at": "center", "tail": false, "scale": 1.3 }]
+        },
+        {
+          "image": { "src": "person.jpg", "zoom": 1.8, "focus": [0.5, 0.45], "gray": true },
+          "bubbles": [{ "text": "…どうして\nねこが\nほうきに？", "shape": "cloud", "at": [0.72, 0.3], "tail": { "to": [0.5, 0.55] } }]
+        }
+      ]
+    },
+    {
+      "layout": { "rows": [[1], [1, 1], [1]] },
+      "panels": [
+        {
+          "image": "sky.jpg",
+          "effects": [{ "kind": "tone", "pattern": "grad", "density": 0.5, "density2": 0, "gradientAngle": 90 }],
+          "texts": [{ "text": "そのとき\n空から", "at": "top-right", "font": "mincho", "bold": false, "scale": 0.8, "background": "#ffffff" }]
+        },
+        { "image": { "src": "hills.jpg", "mode": "mono", "threshold": 110 } },
+        {
+          "effects": [{ "kind": "flash" }],
+          "bubbles": [{ "text": "まさか\n本当に？", "at": "center", "tail": false }]
+        },
+        {
+          "image": "hills.jpg",
+          "bubbles": [{ "text": "いっしょに\n行こう", "shape": "round", "at": "top-right", "tail": "down" }]
+        }
+      ],
+      "items": [{ "type": "image", "src": "chara.png", "at": [0.5, 0.64], "width": 0.3, "rotate": -6 }]
+    }
+  ]
+}

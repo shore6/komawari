@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コマワリ工房</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Antique&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>/*CSS*/</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <button class="ib only-narrow" id="bLeft" type="button" title="ページと画像" aria-label="ページと画像"><i data-i="pages"></i></button>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="4" fill="var(--ink)"/><path d="M6.5 6.5h19v8H6.5z" fill="var(--bg)"/><path d="M6.5 17.5h9.2l-2.6 8H6.5z" fill="var(--bg)"/><path d="M18.8 17.5h6.7v8h-9.3z" fill="var(--red)"/></svg>
+      <b>コマワリ工房</b>
+    </div>
+    <div class="proj"><input id="projName" type="text" aria-label="作品名" spellcheck="false" autocomplete="off"><span id="dirty" title="保存していない変更があります"></span></div>
+    <div class="grp">
+      <button class="tb" id="bNew" type="button" title="新しい作品"><i data-i="new"></i><span>新規</span></button>
+      <button class="tb" id="bOpen" type="button" title="作品ファイルを開く (Ctrl+O)"><i data-i="open"></i><span>開く</span></button>
+      <button class="tb" id="bSave" type="button" title="作品をファイルに保存 (Ctrl+S)"><i data-i="save"></i><span>保存</span></button>
+    </div>
+    <div class="grp hist">
+      <button class="ib" id="bUndo" type="button" title="元に戻す (Ctrl+Z)" aria-label="元に戻す"><i data-i="undo"></i></button>
+      <button class="ib" id="bRedo" type="button" title="やり直す (Ctrl+Y)" aria-label="やり直す"><i data-i="redo"></i></button>
+    </div>
+    <div class="sp"></div>
+    <div class="grp zoom">
+      <button class="ib" id="bZout" type="button" title="縮小" aria-label="縮小"><i data-i="zoomout"></i></button>
+      <button class="zl" id="bZfit" type="button" title="ページ全体を表示 (Ctrl+0)">100%</button>
+      <button class="ib" id="bZin" type="button" title="拡大" aria-label="拡大"><i data-i="zoomin"></i></button>
+    </div>
+    <button class="primary" id="bExport" type="button" title="画像として書き出し (Ctrl+E)"><i data-i="export"></i><span>書き出し</span></button>
+    <button class="ib only-narrow2" id="bRight" type="button" title="プロパティ" aria-label="プロパティ"><i data-i="sliders"></i></button>
+  </header>
+
+  <nav id="rail" aria-label="ツール">
+    <button class="tool on" type="button" data-tool="select" title="選択 (V)"><i data-i="select"></i><span>選択</span></button>
+    <button class="tool" type="button" data-tool="knife" title="コマ割り：ドラッグで分割 (K)"><i data-i="knife"></i><span>コマ割り</span></button>
+    <button class="tool" type="button" data-tool="hand" title="表示の移動 (H／Spaceを押しながら)"><i data-i="hand"></i><span>移動</span></button>
+    <hr>
+    <button type="button" data-add="template" title="コマ割りテンプレート"><i data-i="template"></i><span>テンプレ</span></button>
+    <button type="button" data-add="panel" title="四角いコマを追加"><i data-i="addpanel"></i><span>コマ追加</span></button>
+    <hr>
+    <button type="button" data-add="bubble" title="吹き出しを追加"><i data-i="bubble"></i><span>吹き出し</span></button>
+    <button type="button" data-add="text" title="テキストを追加"><i data-i="text"></i><span>テキスト</span></button>
+    <button type="button" data-add="sfx" title="効果音（描き文字）を追加"><i data-i="sfx"></i><span>効果音</span></button>
+    <hr>
+    <button type="button" data-add="focus" title="集中線を追加"><i data-i="focus"></i><span>集中線</span></button>
+    <button type="button" data-add="speed" title="流線（スピード線）を追加"><i data-i="speed"></i><span>流線</span></button>
+    <button type="button" data-add="flash" title="ウニフラッシュを追加"><i data-i="flash"></i><span>ウニフラ</span></button>
+    <button type="button" data-add="tone" title="スクリーントーンを追加"><i data-i="tone"></i><span>トーン</span></button>
+    <hr>
+    <button type="button" data-add="image" title="画像を読み込んで配置"><i data-i="image"></i><span>画像</span></button>
+  </nav>
+
+  <aside id="left" aria-label="ページと画像">
+    <section class="pane pages">
+      <div class="ph"><h2>ページ</h2><span id="pageCount" class="muted"></span></div>
+      <div id="pageList" class="pagelist"></div>
+      <div class="btnrow">
+        <button class="sb" id="pgAdd" type="button" title="同じコマ割りでページを追加"><i data-i="plus"></i>追加</button>
+        <button class="sb icon" id="pgDup" type="button" title="このページを複製" aria-label="このページを複製"><i data-i="copy"></i></button>
+        <button class="sb icon" id="pgUp" type="button" title="前へ移動" aria-label="前へ移動"><i data-i="up"></i></button>
+        <button class="sb icon" id="pgDown" type="button" title="後ろへ移動" aria-label="後ろへ移動"><i data-i="down"></i></button>
+        <button class="sb icon danger" id="pgDel" type="button" title="このページを削除" aria-label="このページを削除"><i data-i="trash"></i></button>
+      </div>
+    </section>
+    <section class="pane lib">
+      <div class="ph"><h2>画像</h2><span id="libCount" class="muted"></span></div>
+      <div id="libGrid" class="libgrid"></div>
+      <div class="btnrow">
+        <button class="sb" id="libAdd" type="button" title="画像ファイルを読み込む"><i data-i="plus"></i>画像を追加</button>
+        <button class="sb" id="libAuto" type="button" title="まだ使っていない画像を、空いているコマへ読み順に入れます"><i data-i="auto"></i>空きコマへ配置</button>
+      </div>
+    </section>
+  </aside>
+
+  <main id="stage">
+    <canvas id="cv" aria-label="マンガのページ"></canvas>
+    <textarea id="inlineEd" hidden spellcheck="false" aria-label="セリフを編集"></textarea>
+    <div id="status"><span id="hint"></span><span id="sample" hidden>サンプルのページです。「新規」で白紙から始められます</span></div>
+  </main>
+
+  <aside id="right" aria-label="プロパティ">
+    <div class="rtabs" role="tablist">
+      <button class="rtab on" type="button" role="tab" data-tab="props" aria-selected="true">プロパティ</button>
+      <button class="rtab" type="button" role="tab" data-tab="layers" aria-selected="false">レイヤー</button>
+    </div>
+    <div id="props" class="rbody"></div>
+    <div id="layers" class="rbody" hidden></div>
+  </aside>
+</div>
+
+<div id="modal" class="modal" hidden><div class="sheet" role="dialog" aria-modal="true"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="busy" hidden><div class="spin"></div><span id="busyText">処理中…</span></div>
+<input type="file" id="fImg" accept="image/*" multiple hidden>
+<input type="file" id="fProj" accept=".json,application/json" hidden>
+<input type="file" id="fFont" accept=".ttf,.otf,.woff,.woff2" hidden>
+<script>/*JS*/</script>
+</body>
+</html>

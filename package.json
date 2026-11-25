@@ -1,0 +1,20 @@
+{
+  "name": "komawari",
+  "version": "1.0.0",
+  "private": true,
+  "description": "コマワリ工房 CLI: LLMやスクリプトからマンガのページ（コマ割り・画像・吹き出し・効果）を組み立て、好きな解像度で書き出す",
+  "bin": {
+    "komawari": "bin/komawari.js"
+  },
+  "main": "lib/index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node test/smoke.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.2.0"
+  }
+}
