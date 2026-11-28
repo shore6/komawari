@@ -19,6 +19,16 @@ const a = run('apply', path.join(dir, 'story.manga.json'), path.join(dir, 'ops.j
 check(a.ok && a.results[0].id === 'smoke1', '操作を適用できる');
 const i = run('info', path.join(dir, 'story.manga.json'), '--page', '1');
 check(i.ok && i.pages[0].items.some(x => x.id === 'smoke1' && x.panel === 4), 'info に追加した吹き出しが出る');
+fs.writeFileSync(path.join(dir, 'shapes.json'), JSON.stringify([
+  { op: 'shape', page: 1, panel: 4, shape: 'rect', id: 'rc1', size: 0.5, at: [0.4, 0.5] },
+  { op: 'shape', page: 1, panel: 4, shape: 'ellipse', id: 'el1', size: 0.5, at: [0.6, 0.5], fill: '#cccccc', line: 'dashed', pattern: 'dots' },
+  { op: 'combine', ids: ['el1', 'rc1'], mode: 'subtract', id: 'cut1' },
+  { op: 'shape', page: 2, points: [[0.1, 0.1], [0.4, 0.1], [0.25, 0.4]], id: 'tri', strokeAlign: 'outside' },
+]));
+const sa = run('apply', path.join(dir, 'story.manga.json'), path.join(dir, 'shapes.json'));
+check(sa.ok && sa.results[2].id === 'cut1', '図形を追加して型抜きで結合できる');
+const si = run('info', path.join(dir, 'story.manga.json'));
+check(si.pages[0].items.some(x => x.id === 'cut1' && x.type === 'shape' && x.shape === 'path' && x.fill === '#ffffff') && !si.pages[0].items.some(x => x.id === 'rc1' || x.id === 'el1') && si.pages[1].items.some(x => x.id === 'tri' && x.vertices === 3), 'info に結合した図形と自由な多角形が出る');
 const r = run('render', path.join(dir, 'story.manga.json'), '-o', path.join(dir, 'final', 'p{n}.jpg'), '--page', 'all', '--scale', '0.5');
 check(r.ok && r.files.length === 2 && r.files[0].width === 910, 'JPEGで縮小書き出しできる');
 let bad;

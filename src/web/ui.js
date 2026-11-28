@@ -58,7 +58,7 @@ function area(obj, key, o = {}) {
   return t;
 }
 function btn(label, fn, o = {}) {
-  const b = el('button', { type: 'button', class: 'pb' + (o.cls ? ' ' + o.cls : ''), title: o.title || null }, o.icon ? icon(o.icon) : null, label ? el('span', { text: label }) : null);
+  const b = el('button', { type: 'button', class: 'pb' + (o.cls ? ' ' + o.cls : ''), title: o.title || null, 'aria-label': !label && o.title ? o.title : null }, o.icon ? icon(o.icon) : null, label ? el('span', { text: label }) : null);
   b.addEventListener('click', fn);
   return b;
 }
@@ -79,11 +79,13 @@ function buildProps() {
   root.textContent = '';
   const s = selectedObj();
   if (!s) propsPage(root);
+  else if (s.kind === 'multi') propsMulti(root, s.objs);
   else if (s.kind === 'panel') propsPanel(root, s.obj);
   else if (s.obj.type === 'bubble') propsBubble(root, s.obj);
   else if (s.obj.type === 'text') propsText(root, s.obj);
   else if (s.obj.type === 'effect') propsEffect(root, s.obj);
   else if (s.obj.type === 'image') propsImageItem(root, s.obj);
+  else if (s.obj.type === 'shape') propsShape(root, s.obj);
   if (root.dataset.sel === String(selId)) root.scrollTop = keep;
   root.dataset.sel = String(selId);
 }
@@ -110,13 +112,15 @@ function propsPage(root) {
     field('作品名', (() => { const i = el('input', { type: 'text', id: 'c-name', value: project.name }); i.addEventListener('input', () => { project.name = i.value; $('#projName').value = i.value; scheduleCommit(); }); return i; })()),
     field('ページの背景', color(page, 'bg', { def: '#ffffff' })),
     chk(ed, 'guides', '基本枠のガイド（水色の点線）を表示', { silent: true, on: requestRender }),
-    chk(ed, 'numbers', 'コマの読み順番号を表示', { silent: true, on: requestRender })));
+    chk(ed, 'numbers', 'コマの読み順番号を表示', { silent: true, on: requestRender }),
+    multiModeChk()));
   root.append(sec('使い方',
     el('ul', { class: 'tips' },
       el('li', {}, el('b', { text: '画像' }), '：コマへドラッグ＆ドロップ、またはコマをダブルクリック。複数まとめてドロップすると空きコマへ読み順に入ります'),
       el('li', {}, el('b', { text: 'コマ割り' }), '：ツールを選んでコマの上をドラッグすると分割。選んだコマの角や辺をドラッグで変形（Altで単独）'),
       el('li', {}, el('b', { text: '吹き出し' }), '：ダブルクリックでセリフを編集。赤い丸をドラッグでしっぽの向き'),
       el('li', {}, el('b', { text: '重なり' }), '：背面のものは Alt+クリック か「レイヤー」タブで選べます'),
+      el('li', {}, el('b', { text: '図形' }), '：左の「図形」から追加。Shift+クリックで複数選ぶと、合体・型抜きなどの結合や整列ができます'),
       el('li', {}, el('b', { text: 'ショートカット' }), '：Ctrl+Z 元に戻す／Ctrl+D 複製／Delete 削除／Space+ドラッグ 表示移動'))));
 }
 function imageAdjust(im) {
@@ -203,6 +207,8 @@ function shapePicker(it, on) {
   }
   return g;
 }
+/* touch screens have no Shift key: this makes every tap add to (or remove from) the selection */
+function multiModeChk() { return chk(ed, 'multiMode', '複数選択モード（タップで選択に追加・解除）', { id: 'multimode', silent: true }); }
 function commonProps(root, it) {
   const clipSt = { on: !!it.clip };
   root.append(sec('配置',
@@ -215,6 +221,7 @@ function commonProps(root, it) {
     } }),
     it.clip ? btn('下のコマを選ぶ', () => select(it.clip), { title: 'この効果が入っているコマを選択します' }) : null,
     chk(it, 'locked', 'ロック（キャンバスでは選ばれなくなります）', { on: () => { renderLayers(); requestRender(); } }),
+    multiModeChk(),
     el('div', { class: 'btns' }, btn('最前面', () => orderSel('top')), btn('前へ', () => orderSel('up')), btn('後ろへ', () => orderSel('down')), btn('最背面', () => orderSel('bottom'))),
     el('div', { class: 'btns' }, btn('複製', duplicateSel, { icon: 'copy' }), btn('削除', deleteSel, { icon: 'trash', cls: 'danger' }))));
 }
@@ -286,6 +293,91 @@ function propsEffect(root, it) {
     it.clip ? btn('コマいっぱいに合わせる', () => { const pn = findPanel(it.clip); if (!pn) return; const b = polyBBox(pn.pts), pad = (pn.bw ?? project.layout.bw); it.x = b.cx; it.y = b.cy; it.w = b.w + pad * 2; it.h = b.h + pad * 2; it.rot = 0; commit(); buildProps(); }) : null));
   commonProps(root, it);
 }
+/* ---- shapes ---- */
+let lastFill = '#ffffff', lastStroke = '#111111';
+function figurePicker(it) {
+  const g = el('div', { class: 'shapes four', id: 'c-figure' }), r = it.radius / Math.max(1, Math.min(it.w, it.h));
+  for (const [v, l] of SHAPE_KINDS) {
+    if (v === 'path') continue;
+    const ar = v === 'polygon' || v === 'star' ? shapeAspect({ shape: v, sides: it.sides, inner: it.inner }) : v === 'rect' ? 1.45 : 1.3;
+    const h = 44, w = Math.min(84, h * ar), c = el('canvas', { width: 92, height: 60 }), x = c.getContext('2d');
+    x.translate(46, 30);
+    drawShape(x, { shape: v, w, h, sides: it.sides, inner: it.inner, radius: v === 'rect' ? r * Math.min(w, h) : 0, fill: '#ffffff', stroke: '#141414', sw: 3, pattern: 'solid', line: 'solid', join: 'miter', salign: 'center' });
+    const b = el('button', { type: 'button', class: 'shape' + (it.shape === v ? ' on' : ''), 'aria-pressed': String(it.shape === v), title: l }, c, el('span', { text: l }));
+    b.addEventListener('click', () => { if (it.shape === v) return; it.shape = v; changed(); buildProps(); });
+    g.append(b);
+  }
+  return g;
+}
+function toneFields(it) {
+  return [
+    field('模様', seg(it, 'pattern', [['dots', '網点'], ['grad', 'グラデ'], ['lines', '斜線'], ['cross', '格子']], { rebuild: true })),
+    field('目の細かさ', range(it, 'pitch', { min: 3, max: 80, step: 0.5 })),
+    field(it.pattern === 'grad' ? '濃さ（始点）' : '濃さ', range(it, 'dens', { min: 0.02, max: 1, step: 0.01, pct: true })),
+    it.pattern === 'grad' ? field('濃さ（終点）', range(it, 'd2', { min: 0, max: 1, step: 0.01, pct: true })) : null,
+    it.pattern === 'grad' ? field('グラデの向き', range(it, 'gang', { min: -180, max: 180, unit: '°' })) : null,
+    field('網の角度', range(it, 'angle', { min: 0, max: 180, unit: '°' })),
+  ];
+}
+function propsShape(root, it) {
+  const editing = vEditing(it), path = it.shape === 'path', pieces = shapePieceCount(it);
+  const verts = path ? shapeRings(it).reduce((n, r) => n + r.length, 0) : 0;
+  root.append(head(shapeName(it), path ? '頂点 ' + verts + '個' + (pieces > 1 ? '・' + pieces + 'つの部分' : '') : '図形'));
+  const title = root.querySelector('.phead h2'), retitle = () => { title.textContent = shapeName(it); };
+  root.append(sec('形',
+    path ? note('クリックで描いた形や、結合してできた形です。頂点を動かして形を変えられます。') : figurePicker(it),
+    it.shape === 'rect' ? field('角の丸み', range(it, 'radius', { min: 0, max: Math.max(1, Math.floor(Math.min(it.w, it.h) / 2)), step: 0.5, on: retitle })) : null,
+    it.shape === 'polygon' ? field('角の数', range(it, 'sides', { min: 3, max: 12, on: retitle })) : null,
+    it.shape === 'star' ? field('トゲの数', range(it, 'sides', { min: 3, max: 24 })) : null,
+    it.shape === 'star' ? field('へこみ', range(it, 'inner', { min: 0.1, max: 0.95, step: 0.01, pct: true })) : null,
+    el('div', { class: 'btns' },
+      path ? null : btn('縦横比をそろえる', () => { const a = Math.sqrt(shapeAspect(it)), s = Math.sqrt(it.w * it.h); it.w = round(s * a, 10); it.h = round(s / a, 10); commit(); requestRender(); buildProps(); }, { title: '正方形・正円・正多角形の形に戻します（面積はそのまま）' }),
+      btn(editing ? '頂点の編集を終える' : '頂点を編集', () => toggleVertexEdit(it), { icon: 'vertex', cls: editing ? 'strong' : '' }),
+      pieces > 1 ? btn('ばらばらにする', () => combineSel('fragment'), { icon: 'cb-fragment', title: '離れている部分を、別々の図形に分けます' }) : null),
+    editing ? note('頂点をドラッグで移動、辺の中央の○をドラッグで頂点を追加、Alt+クリックかダブルクリックで頂点を削除。Escで終わります。')
+      : path ? null : note('「頂点を編集」を押すと、頂点を自由に動かせる「自由形」に変換します。')));
+  const fm = { m: !it.fill || it.fill === 'none' ? 'none' : TONE_PATTERNS.includes(it.pattern) ? 'tone' : 'solid' };
+  root.append(sec('塗り',
+    field('塗り', seg(fm, 'm', [['none', 'なし'], ['solid', 'ベタ'], ['tone', 'トーン']], { id: 'fillmode', silent: true, on: () => {
+      if (it.fill && it.fill !== 'none') lastFill = it.fill;
+      if (fm.m === 'none') it.fill = '';
+      else if (fm.m === 'solid') { it.fill = it.fill || lastFill || '#ffffff'; it.pattern = 'solid'; }
+      else { it.fill = !it.fill || /^#f{6}$/i.test(it.fill) ? '#111111' : it.fill; if (!TONE_PATTERNS.includes(it.pattern)) it.pattern = 'dots'; }
+      commit(); requestRender(); buildProps();
+    } })),
+    fm.m === 'none' ? null : field(fm.m === 'tone' ? 'トーンの色' : '色', color(it, 'fill', { def: '#ffffff' })),
+    ...(fm.m === 'tone' ? toneFields(it) : [])));
+  const sm = { m: it.stroke && it.stroke !== 'none' && it.sw > 0 ? 'on' : 'none' }, on = sm.m === 'on';
+  root.append(sec('線',
+    field('線', seg(sm, 'm', [['none', 'なし'], ['on', 'あり']], { id: 'strokemode', silent: true, on: () => {
+      if (sm.m === 'none') { if (it.stroke && it.stroke !== 'none') lastStroke = it.stroke; it.stroke = ''; }
+      else { it.stroke = it.stroke && it.stroke !== 'none' ? it.stroke : lastStroke || '#111111'; if (!(it.sw > 0)) it.sw = Math.max(1, Math.round(0.25 * U() * 2) / 2); }
+      commit(); requestRender(); buildProps();
+    } })),
+    on ? el('div', { class: 'two' }, field('色', color(it, 'stroke', { id: 'scolor', def: '#111111' })), field('太さ', num(it, 'sw', { min: 0.5, step: 0.5 }))) : null,
+    on ? field('種類', seg(it, 'line', [['solid', '実線'], ['dashed', '破線'], ['dotted', '点線']])) : null,
+    on ? field('角の形', seg(it, 'join', [['miter', 'とがる'], ['round', '丸い'], ['bevel', '面取り']])) : null,
+    on ? field('線の位置', seg(it, 'salign', [['center', '中央'], ['inside', '内側'], ['outside', '外側']])) : null));
+  root.append(sec('大きさ',
+    el('div', { class: 'two' }, field('幅', num(it, 'w', { min: 1 })), field('高さ', num(it, 'h', { min: 1 }))),
+    note('Shift+クリックで図形を2つ以上選ぶと、合体・型抜き・交差・中マド・分割ができます。')));
+  commonProps(root, it);
+}
+const COMBINE_HELP = { union: '重ねた図形を1つにまとめます', subtract: 'いちばん後ろの図形から、前にある図形の形をくり抜きます', intersect: 'すべての図形が重なっている部分だけを残します', exclude: '重なっている部分をくり抜きます（中マド）', fragment: '重なりの境目で、ばらばらの図形に分けます' };
+function propsMulti(root, objs) {
+  const shapes = objs.filter(it => it.type === 'shape');
+  root.append(head(objs.length + '個を選択中', 'Shift+クリックで選択に追加・解除できます'));
+  root.append(sec('図形の結合',
+    shapes.length >= 2 ? el('div', { class: 'combos' }, COMBINE_MODES.map(([m, l]) => btn(l, () => combineSel(m), { icon: 'cb-' + m, title: COMBINE_HELP[m] }))) : null,
+    note(shapes.length >= 2 ? '結果は、いちばん後ろの図形の塗りと線を引き継ぎます（分割は、各部分でいちばん前にあった図形）。' + (shapes.length < objs.length ? '図形以外は結合されません。' : '')
+      : '図形を2つ以上選ぶと、合体・型抜き・交差・中マド・分割ができます。')));
+  root.append(sec('整列',
+    el('div', { class: 'btns' }, [['left', '左揃え'], ['hcenter', '左右中央揃え'], ['right', '右揃え'], ['top', '上揃え'], ['vcenter', '上下中央揃え'], ['bottom', '下揃え']].map(([w, t]) => btn('', () => alignSel(w), { icon: 'al-' + w, cls: 'icon', title: t })))));
+  root.append(sec('操作',
+    el('div', { class: 'btns' }, btn('最前面', () => orderSel('top')), btn('前へ', () => orderSel('up')), btn('後ろへ', () => orderSel('down')), btn('最背面', () => orderSel('bottom'))),
+    el('div', { class: 'btns' }, btn('複製', duplicateSel, { icon: 'copy' }), btn('削除', deleteSel, { icon: 'trash', cls: 'danger' })),
+    multiModeChk()));
+}
 function propsImageItem(root, it) {
   const a = project.assets[it.asset];
   root.append(head('画像（フリー配置）', 'コマの枠を飛び出す人物などに'));
@@ -309,21 +401,23 @@ function itemLabel(it) {
   if (it.type === 'bubble') return '吹き出し「' + t(it.text) + '」';
   if (it.type === 'text') return 'テキスト「' + t(it.text) + '」';
   if (it.type === 'image') return '画像 ' + t(project.assets[it.asset] ? project.assets[it.asset].name : '');
+  if (it.type === 'shape') return '図形 ' + shapeName(it);
   return EFFECT_NAMES[it.kind] || '効果';
 }
-function itemIcon(it) { return it.type === 'bubble' ? 'bubble' : it.type === 'text' ? (it.sw2 > 0 ? 'sfx' : 'text') : it.type === 'image' ? 'image' : it.kind; }
+function shapeIcon(it) { return it.shape === 'rect' ? (it.radius > 0 ? 'rrect' : 'rect') : it.shape === 'polygon' ? (Math.round(it.sides) === 3 ? 'triangle' : 'polygon') : it.shape === 'path' ? 'pen' : it.shape; }
+function itemIcon(it) { return it.type === 'bubble' ? 'bubble' : it.type === 'text' ? (it.sw2 > 0 ? 'sfx' : 'text') : it.type === 'image' ? 'image' : it.type === 'shape' ? shapeIcon(it) : it.kind; }
 function renderLayers() {
   clearTimeout(layersTimer);
   const root = $('#layers');
   if (!root || !project) return;
   root.textContent = '';
-  const page = curPage();
-  root.append(el('div', { class: 'lhead', text: 'オブジェクト（上ほど手前）' }));
+  const page = curPage(), chosen = new Set(selItems().map(x => x.id));
+  root.append(el('div', { class: 'lhead', text: 'オブジェクト（上ほど手前・Shift+クリックで複数選択）' }));
   if (!page.items.length) root.append(note('まだありません。左のツールから吹き出しや効果を追加できます。'));
   for (let i = page.items.length - 1; i >= 0; i--) {
     const it = page.items[i], name = itemLabel(it);
-    root.append(el('div', { class: 'lyr' + (it.id === ed.sel ? ' on' : '') + (it.hidden ? ' off' : '') },
-      el('button', { type: 'button', class: 'nm', title: name, onclick: () => select(it.id) }, icon(itemIcon(it)), el('span', { text: name }), it.clip ? el('small', { text: 'コマ内' }) : null),
+    root.append(el('div', { class: 'lyr' + (chosen.has(it.id) ? ' on' : '') + (it.hidden ? ' off' : '') },
+      el('button', { type: 'button', class: 'nm', title: name, onclick: ev => (ev.shiftKey || ev.ctrlKey || ev.metaKey || ed.multiMode ? toggleSel(it.id) : select(it.id)) }, icon(itemIcon(it)), el('span', { text: name }), it.clip ? el('small', { text: 'コマ内' }) : null),
       el('button', { type: 'button', class: 'ib', title: it.hidden ? '表示する' : '隠す', 'aria-label': it.hidden ? '表示する' : '隠す', onclick: () => { it.hidden = !it.hidden; commit(); renderLayers(); } }, icon(it.hidden ? 'eyeoff' : 'eye')),
       el('button', { type: 'button', class: 'ib', title: it.locked ? 'ロックを解除' : 'ロックする', 'aria-label': it.locked ? 'ロックを解除' : 'ロックする', onclick: () => { it.locked = !it.locked; commit(); renderLayers(); if (it.id === ed.sel) buildProps(); requestRender(); } }, icon(it.locked ? 'lock' : 'unlock'))));
   }
@@ -360,7 +454,7 @@ function renderPages() {
 }
 function gotoPage(i) {
   if (i === ed.pi || i < 0 || i >= project.pages.length) return;
-  closeInline(); flushCommit();
+  closeInline(); flushCommit(); cancelPen(); endVertexEdit(true);
   ed.pi = i; ed.sel = null;
   renderPages(); buildProps(); renderLayers(); requestRender();
 }
@@ -545,9 +639,39 @@ function createNew(st) {
 function clearCaches() { imgCache.clear(); lumCache.clear(); procCache.clear(); layoutCache.clear(); fontReq.clear(); libThumbs.clear(); }
 function refreshAll() { $('#projName').value = project.name; renderPages(); renderLibrary(); buildProps(); renderLayers(); requestRender(); updateHistButtons(); updateDirty(); }
 
+/* ================= shape menu (図形) ================= */
+function openShapeMenu() {
+  const m = $('#shapeMenu'), b = $('#bShape');
+  if (!m.hidden) { closeShapeMenu(); return; }
+  m.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+  const side = getComputedStyle($('#rail')).flexDirection === 'column';
+  m.style.left = (side ? r.right + 6 : clamp(r.left + r.width / 2 - mw / 2, 8, Math.max(8, W - mw - 8))) + 'px';
+  m.style.top = (side ? clamp(r.top, 8, Math.max(8, H - mh - 8)) : Math.max(8, r.top - mh - 6)) + 'px';
+  const f = m.querySelector('button');
+  if (f) f.focus();
+}
+function closeShapeMenu(focusBack) {
+  const m = $('#shapeMenu');
+  if (!m || m.hidden) return;
+  m.hidden = true; $('#bShape').setAttribute('aria-expanded', 'false');
+  if (focusBack) $('#bShape').focus();
+}
+
 /* ================= wiring ================= */
 function wireUI() {
   for (const i of $$('i[data-i]')) i.innerHTML = iconSVG(i.dataset.i);
+  $('#bShape').addEventListener('click', openShapeMenu);
+  for (const b of $$('#shapeMenu [data-shape]')) b.addEventListener('click', () => { closeShapeMenu(); addShape(b.dataset.shape); });
+  $('#shapeMenu').addEventListener('keydown', e => {
+    e.stopPropagation();
+    const items = $$('#shapeMenu button'), i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus(); }
+    else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); items[e.key === 'Home' ? 0 : items.length - 1].focus(); }
+    else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); closeShapeMenu(true); }
+  });
+  document.addEventListener('pointerdown', e => { if (!$('#shapeMenu').hidden && !e.target.closest('#shapeMenu, #bShape')) closeShapeMenu(); }, true);
+  window.addEventListener('resize', () => closeShapeMenu());
   $('#bNew').addEventListener('click', openNew);
   $('#bOpen').addEventListener('click', openProjectDialog);
   $('#bSave').addEventListener('click', saveProject);
@@ -580,7 +704,7 @@ function wireUI() {
   cv.addEventListener('pointermove', onMove);
   cv.addEventListener('pointerup', onUp);
   cv.addEventListener('pointercancel', onUp);
-  cv.addEventListener('pointerleave', () => { if (!ed.drag && ed.hover) { ed.hover = null; requestRender(); } });
+  cv.addEventListener('pointerleave', () => { if (!ed.drag && ed.hover) { ed.hover = null; requestRender(); } if (ed.pen && ed.pen.cur) { ed.pen.cur = null; ed.pen.close = false; requestRender(); } });
   cv.addEventListener('wheel', onWheel, { passive: false });
   cv.addEventListener('contextmenu', e => e.preventDefault());
   inlineEd.addEventListener('input', onInlineInput);

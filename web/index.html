@@ -152,6 +152,17 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .shape:hover{background:var(--soft)}
 .shape canvas{width:46px;height:30px}
 .shape.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.shapes.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.combos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.combos .pb{flex-direction:column;height:auto;min-height:60px;padding:8px 2px 6px;gap:5px}
+.combos .pb .ic{width:22px;height:22px}
+.pb.icon{width:40px;padding:0}
+.pb.icon .ic{width:20px;height:20px}
+.flyout{position:fixed;z-index:45;display:flex;flex-direction:column;gap:2px;min-width:212px;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);box-shadow:var(--shadow)}
+.flyout button{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;border:0;border-radius:8px;background:transparent;font-size:14px;text-align:left;white-space:nowrap}
+.flyout button:hover,.flyout button:focus-visible{background:var(--soft)}
+.flyout button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.flyout hr{border:0;border-top:1px solid var(--line);margin:4px 6px}
 .imgrow{display:flex;gap:10px;align-items:center}
 .imgrow img{width:56px;height:56px;object-fit:cover;border-radius:6px;box-shadow:0 0 0 1px var(--line);flex:none}
 .imgname{font-size:13px;overflow-wrap:anywhere;color:var(--sub)}
@@ -265,8 +276,19 @@ body.show-right #right{transform:none;visibility:visible}
     <button type="button" data-add="flash" title="ウニフラッシュを追加"><i data-i="flash"></i><span>ウニフラ</span></button>
     <button type="button" data-add="tone" title="スクリーントーンを追加"><i data-i="tone"></i><span>トーン</span></button>
     <hr>
+    <button type="button" id="bShape" title="図形を追加（四角形・楕円・多角形・星・自由形）" aria-haspopup="menu" aria-expanded="false" aria-controls="shapeMenu"><i data-i="shapes"></i><span>図形</span></button>
     <button type="button" data-add="image" title="画像を読み込んで配置"><i data-i="image"></i><span>画像</span></button>
   </nav>
+  <div id="shapeMenu" class="flyout" role="menu" aria-label="図形を追加" hidden>
+    <button type="button" role="menuitem" data-shape="rect"><i data-i="rect"></i><span>四角形</span></button>
+    <button type="button" role="menuitem" data-shape="rrect"><i data-i="rrect"></i><span>角丸四角形</span></button>
+    <button type="button" role="menuitem" data-shape="ellipse"><i data-i="ellipse"></i><span>楕円</span></button>
+    <button type="button" role="menuitem" data-shape="triangle"><i data-i="triangle"></i><span>三角形</span></button>
+    <button type="button" role="menuitem" data-shape="polygon"><i data-i="polygon"></i><span>多角形</span></button>
+    <button type="button" role="menuitem" data-shape="star"><i data-i="star"></i><span>星</span></button>
+    <hr>
+    <button type="button" role="menuitem" data-shape="pen" title="クリックで頂点を置いて描く (P)"><i data-i="pen"></i><span>自由形（クリックで描く）</span></button>
+  </div>
 
   <aside id="left" aria-label="ページと画像">
     <section class="pane pages">
@@ -383,6 +405,26 @@ const ICONS = {
   auto: '<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/>',
   splith: '<rect x="4" y="3.5" width="16" height="17" rx="1"/><path d="M4 12h16"/>',
   splitv: '<rect x="4" y="3.5" width="16" height="17" rx="1"/><path d="M12 3.5v17"/>',
+  shapes: '<rect x="3.5" y="10" width="10.5" height="10.5" rx="1"/><circle cx="15.5" cy="8.5" r="5"/>',
+  rect: '<rect x="3.5" y="6" width="17" height="12" rx=".8"/>',
+  rrect: '<rect x="3.5" y="6" width="17" height="12" rx="4"/>',
+  ellipse: '<ellipse cx="12" cy="12" rx="8.5" ry="6.5"/>',
+  triangle: '<path d="M12 4.5l8.5 15H3.5z"/>',
+  polygon: '<path d="M12 3.5l7.4 4.25v8.5L12 20.5l-7.4-4.25v-8.5z"/>',
+  star: '<path d="M12 3.6l2.35 5.76 6.21.46-4.76 4.02 1.49 6.04L12 16.6l-5.29 3.28 1.49-6.04-4.76-4.02 6.21-.46z"/>',
+  pen: '<path d="M4.5 18.5L7 6l6.5 3.5L19.5 5l-1.5 13.5z"/><g fill="currentColor" stroke="none"><circle cx="4.5" cy="18.5" r="1.7"/><circle cx="7" cy="6" r="1.7"/><circle cx="13.5" cy="9.5" r="1.7"/><circle cx="19.5" cy="5" r="1.7"/><circle cx="18" cy="18.5" r="1.7"/></g>',
+  vertex: '<path d="M5 18l3-12 11 4-3 9z"/><g fill="currentColor" stroke="none"><rect x="3.2" y="16.2" width="3.6" height="3.6"/><rect x="6.2" y="4.2" width="3.6" height="3.6"/><rect x="17.2" y="8.2" width="3.6" height="3.6"/><rect x="14.2" y="17.2" width="3.6" height="3.6"/></g>',
+  'cb-union': '<path d="M4 4h10v6h6v10H10v-6H4z" fill="currentColor" fill-opacity=".35"/>',
+  'cb-subtract': '<path d="M4 4h10v6h-4v4H4z" fill="currentColor" fill-opacity=".35"/><path d="M10 10h10v10H10z" stroke-dasharray="2 2"/>',
+  'cb-intersect': '<path d="M4 4h10v10H4zM10 10h10v10H10z" stroke-dasharray="2 2"/><path d="M10 10h4v4h-4z" fill="currentColor" fill-opacity=".5"/>',
+  'cb-exclude': '<path d="M4 4h10v6h6v10H10v-6H4zM10 10h4v4h-4z" fill="currentColor" fill-opacity=".35" fill-rule="evenodd"/>',
+  'cb-fragment': '<path d="M3 3h10v5H8v5H3z"/><path d="M10 10h4v4h-4z" fill="currentColor" fill-opacity=".5"/><path d="M21 21H11v-5h5v-5h5z"/>',
+  'al-left': '<path d="M4 3.5v17"/><rect x="7" y="6" width="12" height="4.5" rx="1"/><rect x="7" y="13.5" width="7.5" height="4.5" rx="1"/>',
+  'al-hcenter': '<path d="M12 3.5v17"/><rect x="5" y="6" width="14" height="4.5" rx="1"/><rect x="7.5" y="13.5" width="9" height="4.5" rx="1"/>',
+  'al-right': '<path d="M20 3.5v17"/><rect x="5" y="6" width="12" height="4.5" rx="1"/><rect x="9.5" y="13.5" width="7.5" height="4.5" rx="1"/>',
+  'al-top': '<path d="M3.5 4h17"/><rect x="6" y="7" width="4.5" height="12" rx="1"/><rect x="13.5" y="7" width="4.5" height="7.5" rx="1"/>',
+  'al-vcenter': '<path d="M3.5 12h17"/><rect x="6" y="5" width="4.5" height="14" rx="1"/><rect x="13.5" y="7.5" width="4.5" height="9" rx="1"/>',
+  'al-bottom': '<path d="M3.5 20h17"/><rect x="6" y="5" width="4.5" height="12" rx="1"/><rect x="13.5" y="9.5" width="4.5" height="7.5" rx="1"/>',
 };
 const iconSVG = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[n] || '') + '</svg>';
 function icon(n) { const s = document.createElement('span'); s.className = 'ic'; s.innerHTML = iconSVG(n); return s; }
@@ -624,11 +666,13 @@ function normalizeItem(raw) {
   else if (raw.type === 'text') base = makeText(x, y);
   else if (raw.type === 'effect') { if (!['focus', 'speed', 'flash', 'tone'].includes(raw.kind)) return null; base = makeEffect(raw.kind, { cx: x, cy: y, w: 100, h: 100 }, null); }
   else if (raw.type === 'image') base = Object.assign(baseItem('image', x, y, 100, 100), { asset: null, keep: true, fx: false, fy: false, gray: false, bright: 100, contrast: 100, mode: 'normal', thr: 128, dot: 12 });
+  else if (raw.type === 'shape') base = makeShape(isShapeKind(raw.shape) ? raw.shape : 'rect', x, y);
   else return null;
-  const out = Object.assign(base, raw);
+  const def = Object.assign({}, base), out = Object.assign(base, raw);
   if (raw.type === 'bubble') out.tail = Object.assign({ on: true, style: 'straight', x: 0, y: 0, w: 0.24, bend: 0.35 }, raw.tail || {});
-  if ('text' in base && typeof out.text !== 'string') out.text = String(out.text ?? '');
-  for (const k of ['x', 'y', 'w', 'h', 'rot', 'opacity']) if (typeof out[k] !== 'number' || !isFinite(out[k])) out[k] = base[k];
+  if ('text' in def && typeof out.text !== 'string') out.text = String(out.text ?? '');
+  for (const k of ['x', 'y', 'w', 'h', 'rot', 'opacity']) if (typeof out[k] !== 'number' || !isFinite(out[k])) out[k] = def[k];
+  if (out.type === 'shape' && !normalizeShape(out, def)) return null;
   if (!out.id) out.id = uid('it');
   return out;
 }
@@ -776,7 +820,7 @@ function resizeProject(w, h, preset) {
         it.x *= sx; it.y *= sy;
         if (it.type === 'text') { it.size *= sm; it.sw *= sm; it.sw2 *= sm; }
         else if (it.type === 'bubble') { it.w *= sm; it.h *= sm; it.size *= sm; it.sw *= sm; it.tail.x *= sm; it.tail.y *= sm; }
-        else { it.w *= sx; it.h *= sy; for (const k of ['thick', 'pitch', 'sw', 'dot']) if (typeof it[k] === 'number') it[k] *= sm; }
+        else { it.w *= sx; it.h *= sy; for (const k of ['thick', 'pitch', 'sw', 'dot', 'radius']) if (typeof it[k] === 'number') it[k] *= sm; }
       }
     }
     const L = project.layout;
@@ -1037,6 +1081,316 @@ function fitBubble(it) {
   it.h = round(Math.max(L.h, it.size) * k + pad * 2, 10);
 }
 
+/* ================= shapes (図形) =================
+   A shape item is drawn in its own box (x, y = centre, w × h, rotated by rot).
+   rect / ellipse / polygon / star are defined by the box; a 'path' keeps its rings
+   normalised to the box (-0.5…0.5), so resizing the box scales the outline. */
+const SHAPE_KINDS = [['rect', '四角形'], ['ellipse', '楕円'], ['polygon', '多角形'], ['star', '星'], ['path', '自由形']];
+const COMBINE_MODES = [['union', '合体'], ['subtract', '型抜き'], ['intersect', '交差'], ['exclude', '中マド'], ['fragment', '分割']];
+const TONE_PATTERNS = ['dots', 'grad', 'lines', 'cross'];
+const isShapeKind = k => SHAPE_KINDS.some(s => s[0] === k);
+function regularPts(kind, sides, inner) {
+  const n = clamp(Math.round(+sides) || 3, 3, 64), star = kind === 'star', m = star ? n * 2 : n, k = clamp(+inner || 0.45, 0.05, 1), out = [];
+  for (let i = 0; i < m; i++) { const a = -Math.PI / 2 + i * TAU / m, r = star && i % 2 ? k : 1; out.push([Math.cos(a) * r, Math.sin(a) * r]); }
+  return out;
+}
+function fitPts(pts, w, h) { const b = polyBBox(pts), sx = w / (b.w || 1), sy = h / (b.h || 1); return pts.map(p => [(p[0] - b.cx) * sx, (p[1] - b.cy) * sy]); }
+/* width / height of the undistorted shape (regular polygons and stars are not square) */
+function shapeAspect(it) { if (it.shape !== 'polygon' && it.shape !== 'star') return 1; const b = polyBBox(regularPts(it.shape, it.sides, it.inner)); return b.w / b.h; }
+function makeShape(kind, x, y, o = {}) {
+  const u = U();
+  if (!isShapeKind(kind)) kind = 'rect';
+  const it = Object.assign(baseItem('shape', x, y, 20 * u, 20 * u), {
+    shape: kind, radius: 0, sides: kind === 'star' ? 5 : 6, inner: 0.45, rings: null,
+    fill: '#ffffff', pattern: 'solid', pitch: Math.max(3, Math.round(0.8 * u)), dens: 0.25, d2: 0, angle: 45, gang: 90,
+    stroke: '#111111', sw: Math.max(1, Math.round(0.25 * u * 2) / 2), line: 'solid', join: 'miter', salign: 'center',
+  });
+  if (kind === 'rect') { it.w = 26 * u; it.h = 18 * u; }
+  Object.assign(it, o, { shape: kind });
+  if ((kind === 'polygon' || kind === 'star') && o.w == null && o.h == null) { const ar = Math.sqrt(shapeAspect(it)); it.w = round(20 * u * ar, 10); it.h = round(20 * u / ar, 10); }
+  return it;
+}
+/* a 'path' shape from rings in page coordinates (polygons drawn by clicking, CLI points) */
+function makePathShape(rings, o = {}) {
+  const b = polyBBox(rings.flat()), w = Math.max(1, b.w), h = Math.max(1, b.h);
+  const it = makeShape('path', b.cx, b.cy, Object.assign({}, o, { w, h }));
+  it.rings = rings.map(r => r.map(q => [round((q[0] - b.cx) / w, 1e6), round((q[1] - b.cy) / h, 1e6)]));
+  return it;
+}
+/* set a path's outline from rings in the item's local pixels (relative to its current centre and rotation) */
+function setPathRings(it, rings) {
+  const b = polyBBox(rings.flat()), w = Math.max(1, b.w), h = Math.max(1, b.h), c = V.add([it.x, it.y], V.rot([b.cx, b.cy], rad(it.rot || 0)));
+  it.shape = 'path'; it.x = c[0]; it.y = c[1]; it.w = w; it.h = h;
+  it.rings = rings.map(r => r.map(q => [round((q[0] - b.cx) / w, 1e6), round((q[1] - b.cy) / h, 1e6)]));
+  return it;
+}
+function normalizeShape(out, def) {
+  if (!isShapeKind(out.shape)) out.shape = 'rect';
+  if (out.shape === 'path') {
+    const rings = (Array.isArray(out.rings) ? out.rings : []).map(r => (Array.isArray(r) ? r : []).filter(q => Array.isArray(q) && q.length >= 2).map(q => [+q[0] || 0, +q[1] || 0])).filter(r => r.length >= 3);
+    if (!rings.length) return false;
+    out.rings = rings;
+  } else out.rings = null;
+  for (const k of ['w', 'h']) if (!(out[k] > 0)) out[k] = def[k];
+  for (const k of ['sw', 'radius', 'sides', 'inner', 'pitch', 'dens', 'd2', 'angle', 'gang']) if (typeof out[k] !== 'number' || !isFinite(out[k])) out[k] = def[k];
+  for (const k of ['fill', 'stroke']) if (typeof out[k] !== 'string') out[k] = out[k] == null ? '' : def[k];
+  return true;
+}
+/* number of segments that keeps a circular arc within tol of the true curve */
+function arcSteps(r, ang, tol) { const t = clamp(tol / Math.max(r, 1e-6), 1e-9, 0.99); return clamp(Math.ceil(Math.abs(ang) / (2 * Math.acos(1 - t))), 2, 720); }
+/* the outline as polygons in local pixels (curves flattened to within tol px) */
+function shapeRings(it, tol = 0.25) {
+  const hw = Math.max(0.5, (+it.w || 0) / 2), hh = Math.max(0.5, (+it.h || 0) / 2);
+  if (it.shape === 'path') return (Array.isArray(it.rings) ? it.rings : []).map(r => r.map(q => [q[0] * hw * 2, q[1] * hh * 2]));
+  if (it.shape === 'ellipse') {
+    const n = Math.max(8, arcSteps(Math.max(hw, hh), TAU, tol)), pts = [];
+    for (let i = 0; i < n; i++) { const a = i / n * TAU; pts.push([Math.cos(a) * hw, Math.sin(a) * hh]); }
+    return [pts];
+  }
+  if (it.shape === 'polygon' || it.shape === 'star') return [fitPts(regularPts(it.shape, it.sides, it.inner), hw * 2, hh * 2)];
+  const r = clamp(+it.radius || 0, 0, Math.min(hw, hh));
+  if (r <= 0.01) return [[[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]];
+  const n = arcSteps(r, Math.PI / 2, tol), pts = [];
+  const corner = (cx, cy, a0) => { for (let i = 0; i <= n; i++) { const a = a0 + i / n * Math.PI / 2; pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } };
+  corner(hw - r, -hh + r, -Math.PI / 2); corner(hw - r, hh - r, 0); corner(-hw + r, hh - r, Math.PI / 2); corner(-hw + r, -hh + r, Math.PI);
+  return [pts];
+}
+/* append the outline to a Path2D in local pixels (ellipses and rounded corners stay true curves) */
+function traceShape(p, it) {
+  const hw = Math.max(0.5, (+it.w || 0) / 2), hh = Math.max(0.5, (+it.h || 0) / 2);
+  if (it.shape === 'ellipse') { p.moveTo(hw, 0); p.ellipse(0, 0, hw, hh, 0, 0, TAU); p.closePath(); return p; }
+  if (it.shape === 'rect') { const r = clamp(+it.radius || 0, 0, Math.min(hw, hh)); if (r > 0.01) rrect(p, -hw, -hh, hw * 2, hh * 2, r); else p.rect(-hw, -hh, hw * 2, hh * 2); return p; }
+  for (const ring of shapeRings(it)) { if (ring.length < 2) continue; ring.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])); p.closePath(); }
+  return p;
+}
+/* convert rect / ellipse / polygon / star into an editable 'path' with the same look */
+function shapeToPath(it, tol = 0.35) {
+  if (it.shape === 'path') return it;
+  const w = Math.max(1, it.w), h = Math.max(1, it.h);
+  it.rings = shapeRings(it, tol).map(r => r.map(q => [round(q[0] / w, 1e6), round(q[1] / h, 1e6)]));
+  it.w = w; it.h = h; it.shape = 'path'; it.radius = 0;
+  return it;
+}
+function windingOf(p, pts) {
+  let w = 0;
+  for (let i = 0, n = pts.length; i < n; i++) {
+    const a = pts[i], b = pts[(i + 1) % n], s = (b[0] - a[0]) * (p[1] - a[1]) - (p[0] - a[0]) * (b[1] - a[1]);
+    if (a[1] <= p[1]) { if (b[1] > p[1] && s > 0) w++; } else if (b[1] <= p[1] && s < 0) w--;
+  }
+  return w;
+}
+/* is the local point l on the shape (inside it or on its line, within tol px)? */
+function shapeHit(it, l, tol = 0) {
+  const sw = +it.sw > 0 && it.stroke && it.stroke !== 'none' ? +it.sw : 0, lim = (it.salign === 'outside' ? sw : it.salign === 'inside' ? 0 : sw / 2) + tol;
+  if (Math.abs(l[0]) > it.w / 2 + lim || Math.abs(l[1]) > it.h / 2 + lim) return false;
+  const rings = shapeRings(it, 0.5);
+  if (rings.reduce((w, r) => w + windingOf(l, r), 0)) return true;
+  for (const r of rings) for (let i = 0; i < r.length; i++) if (distToSeg(l, r[i], r[(i + 1) % r.length]) <= lim) return true;
+  return false;
+}
+function shapeName(it) {
+  if (it.shape === 'rect') return it.radius > 0 ? '角丸四角形' : '四角形';
+  if (it.shape === 'polygon') return it.sides === 3 ? '三角形' : Math.round(it.sides) + '角形';
+  return (SHAPE_KINDS.find(s => s[0] === it.shape) || SHAPE_KINDS[0])[1];
+}
+
+/* ---------- boolean operations (合体・型抜き・交差・中マド・分割) ----------
+   Every outline is snapped to a 1/256 px grid and handled in integers, so the
+   orientation tests are exact. Edges are split where they cross or touch, each
+   piece is classified by the winding numbers on its two sides, and the pieces
+   that separate inside from outside are linked back into rings (the result's
+   inside always on the left, so holes come out reversed). */
+const BOOL_GRID = 256;
+const ptEq = (p, q) => p[0] === q[0] && p[1] === q[1];
+const orient = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+function strictlyOn(a, b, p) { return !ptEq(p, a) && !ptEq(p, b) && Math.min(a[0], b[0]) <= p[0] && p[0] <= Math.max(a[0], b[0]) && Math.min(a[1], b[1]) <= p[1] && p[1] <= Math.max(a[1], b[1]); }
+function splitSegs(segs) {
+  for (let pass = 0; pass < 8; pass++) {
+    const n = segs.length, cuts = new Array(n), box = new Array(n), idx = new Array(n);
+    for (let i = 0; i < n; i++) { const s = segs[i]; box[i] = [Math.min(s.a[0], s.b[0]), Math.min(s.a[1], s.b[1]), Math.max(s.a[0], s.b[0]), Math.max(s.a[1], s.b[1])]; idx[i] = i; }
+    idx.sort((i, j) => box[i][0] - box[j][0]);
+    let any = false;
+    const cut = (i, p) => { (cuts[i] || (cuts[i] = [])).push(p); any = true; };
+    for (let ii = 0; ii < n; ii++) {
+      const i = idx[ii], bi = box[i], a = segs[i].a, b = segs[i].b;
+      for (let jj = ii + 1; jj < n; jj++) {
+        const j = idx[jj], bj = box[j];
+        if (bj[0] > bi[2]) break;
+        if (bj[1] > bi[3] || bj[3] < bi[1]) continue;
+        const c = segs[j].a, d = segs[j].b, o1 = orient(a, b, c), o2 = orient(a, b, d), o3 = orient(c, d, a), o4 = orient(c, d, b);
+        if (o1 && o2 && o3 && o4) {
+          if ((o1 > 0) === (o2 > 0) || (o3 > 0) === (o4 > 0)) continue;
+          const t = o3 / (o3 - o4), p = [Math.round(a[0] + (b[0] - a[0]) * t), Math.round(a[1] + (b[1] - a[1]) * t)];
+          if (!ptEq(p, a) && !ptEq(p, b)) cut(i, p);
+          if (!ptEq(p, c) && !ptEq(p, d)) cut(j, p);
+          continue;
+        }
+        if (!o1 && strictlyOn(a, b, c)) cut(i, c);
+        if (!o2 && strictlyOn(a, b, d)) cut(i, d);
+        if (!o3 && strictlyOn(c, d, a)) cut(j, a);
+        if (!o4 && strictlyOn(c, d, b)) cut(j, b);
+      }
+    }
+    if (!any) break;
+    const next = [];
+    for (let i = 0; i < n; i++) {
+      const s = segs[i], c = cuts[i];
+      if (!c) { next.push(s); continue; }
+      const dx = s.b[0] - s.a[0], dy = s.b[1] - s.a[1], t = p => (p[0] - s.a[0]) * dx + (p[1] - s.a[1]) * dy;
+      c.sort((p, q) => t(p) - t(q));
+      let prev = s.a;
+      for (const p of c) { if (ptEq(p, prev) || ptEq(p, s.b)) continue; next.push({ a: prev, b: p, k: s.k }); prev = p; }
+      next.push({ a: prev, b: s.b, k: s.k });
+    }
+    segs = next;
+  }
+  return segs;
+}
+/* which of two outgoing edges comes first when turning clockwise from the direction (rx, ry) */
+function cwHalf(rx, ry, vx, vy) { const c = rx * vy - ry * vx; return c < 0 ? 0 : c > 0 ? 2 : rx * vx + ry * vy < 0 ? 1 : 3; }
+function cwBefore(rx, ry, e1, e2) {
+  const ax = e1.b[0] - e1.a[0], ay = e1.b[1] - e1.a[1], bx = e2.b[0] - e2.a[0], by = e2.b[1] - e2.a[1], h1 = cwHalf(rx, ry, ax, ay), h2 = cwHalf(rx, ry, bx, by);
+  return h1 !== h2 ? h1 < h2 : ax * by - ay * bx < 0;
+}
+/* link directed boundary edges (inside on the left) into closed rings, hugging each face */
+function linkRings(edges) {
+  const from = new Map(), key = p => p[0] + ',' + p[1];
+  edges.forEach((e, i) => { const k = key(e.a), l = from.get(k); if (l) l.push(i); else from.set(k, [i]); });
+  const used = new Uint8Array(edges.length), rings = [];
+  for (let s = 0; s < edges.length; s++) {
+    if (used[s]) continue;
+    const ring = [];
+    for (let e = s, guard = 0; guard <= edges.length; guard++) {
+      used[e] = 1;
+      const E = edges[e], rx = E.a[0] - E.b[0], ry = E.a[1] - E.b[1];
+      ring.push(E.a);
+      let best = -1;
+      for (const c of from.get(key(E.b)) || []) if ((!used[c] || c === s) && (best < 0 || cwBefore(rx, ry, edges[c], edges[best]))) best = c;
+      if (best < 0 || best === s) break;
+      e = best;
+    }
+    if (ring.length >= 3) rings.push(ring);
+  }
+  return rings;
+}
+function simplifyRing(r) {
+  let pts = r;
+  for (let changed = true; changed && pts.length >= 3;) {
+    changed = false;
+    const out = [];
+    for (let i = 0; i < pts.length; i++) {
+      const a = out.length ? out[out.length - 1] : pts[pts.length - 1], b = pts[i], c = pts[(i + 1) % pts.length];
+      if (orient(a, b, c) === 0) changed = true; else out.push(b);
+    }
+    pts = out;
+  }
+  return pts;
+}
+/* operands: [{ rings: [[[x, y], …], …] }] in one frame (back to front). Returns
+   [{ rings, src }]: one region for union / subtract / intersect / exclude, or one
+   per overlap pattern for fragment (src = index of the front-most operand covering it). */
+function boolOp(operands, mode) {
+  const N = operands.length, S = BOOL_GRID;
+  let segs = [];
+  operands.forEach((op, k) => {
+    for (const ring of op.rings || []) {
+      const pts = [];
+      for (const q of ring) {
+        const x = Math.round(q[0] * S), y = Math.round(q[1] * S), l = pts[pts.length - 1];
+        if (Number.isFinite(x) && Number.isFinite(y) && (!l || l[0] !== x || l[1] !== y)) pts.push([x, y]);
+      }
+      while (pts.length > 1 && ptEq(pts[0], pts[pts.length - 1])) pts.pop();
+      if (pts.length >= 3) for (let i = 0; i < pts.length; i++) segs.push({ a: pts[i], b: pts[(i + 1) % pts.length], k });
+    }
+  });
+  segs = splitSegs(segs);
+  // merge coincident pieces; c[k] = how many times operand k runs along it (signed by direction)
+  const groups = new Map(), G = [];
+  for (const s of segs) {
+    if (ptEq(s.a, s.b)) continue;
+    const fwd = s.a[0] < s.b[0] || (s.a[0] === s.b[0] && s.a[1] < s.b[1]), p = fwd ? s.a : s.b, q = fwd ? s.b : s.a, key = p[0] + ',' + p[1] + ';' + q[0] + ',' + q[1];
+    let g = groups.get(key);
+    if (!g) { g = { a: p, b: q, c: new Int32Array(N) }; groups.set(key, g); G.push(g); }
+    g.c[s.k] += fwd ? 1 : -1;
+  }
+  const label = mode === 'fragment' ? f => (f.includes(true) ? f.map(v => (v ? '1' : '0')).join('') : '')
+    : mode === 'intersect' ? f => (f.every(Boolean) ? '1' : '')
+    : mode === 'subtract' ? f => (f[0] && !f.slice(1).some(Boolean) ? '1' : '')
+    : mode === 'exclude' ? f => (f.filter(Boolean).length % 2 ? '1' : '')
+    : f => (f.some(Boolean) ? '1' : '');
+  const lists = Array.from({ length: N }, () => []);
+  G.forEach((g, i) => { for (let k = 0; k < N; k++) if (g.c[k]) lists[k].push(i); });
+  const regions = new Map(), push = (lab, a, b) => { let l = regions.get(lab); if (!l) regions.set(lab, l = []); l.push({ a, b }); };
+  G.forEach((g, gi) => {
+    // winding numbers just beside the midpoint: a ray towards +x (towards +y for horizontal pieces)
+    const mx = g.a[0] + g.b[0], my = g.a[1] + g.b[1], dx = g.b[0] - g.a[0], dy = g.b[1] - g.a[1], probeLeft = dy !== 0 ? dy < 0 : dx > 0, L = [], R = [];
+    for (let k = 0; k < N; k++) {
+      let w = 0;
+      for (const hi of lists[k]) {
+        if (hi === gi) continue;
+        const h = G[hi], ax = h.a[0], ay = h.a[1], bx = h.b[0], by = h.b[1], s = (bx - ax) * (my - 2 * ay) - (mx - 2 * ax) * (by - ay);
+        if (2 * ay <= my) { if (2 * by > my && s > 0) w += h.c[k]; } else if (2 * by <= my && s < 0) w -= h.c[k];
+      }
+      L.push((probeLeft ? w : w + g.c[k]) !== 0); R.push((probeLeft ? w - g.c[k] : w) !== 0);
+    }
+    const ll = label(L), lr = label(R);
+    if (ll === lr) return;
+    if (ll) push(ll, g.a, g.b);
+    if (lr) push(lr, g.b, g.a);
+  });
+  const out = [];
+  for (const [lab, edges] of regions) {
+    const rings = linkRings(edges).map(simplifyRing).filter(r => r.length >= 3).map(r => r.map(p => [p[0] / S, p[1] / S])).filter(r => Math.abs(polyArea(r)) > 1e-4);
+    if (rings.length) out.push({ rings, src: mode === 'fragment' ? lab.lastIndexOf('1') : 0 });
+  }
+  return out.sort((a, b) => a.src - b.src);
+}
+/* split rings into connected pieces: each outer ring with the holes inside it */
+function ringPieces(rings) {
+  const outers = [], holes = [];
+  for (const r of rings) (polyArea(r) > 0 ? outers : holes).push(r);
+  if (!outers.length) return rings.length ? [rings] : [];
+  const P = outers.map(o => ({ rings: [o], area: polyArea(o) }));
+  for (const h of holes) {
+    const a = h[0], b = h[1], len = V.dist(a, b) || 1, t = Math.min(1e-3, len * 0.01);
+    const m = [(a[0] + b[0]) / 2 + (b[1] - a[1]) / len * t, (a[1] + b[1]) / 2 - (b[0] - a[0]) / len * t];
+    let best = null;
+    for (const p of P) if ((!best || p.area < best.area) && pointInPoly(m, p.rings[0])) best = p;
+    (best || P[0]).rings.push(h);
+  }
+  return P.map(p => p.rings);
+}
+/* outline in page pixels, optionally in a frame rotated by -fr radians */
+function shapeWorldRings(it, tol, fr = 0) {
+  const r = rad(it.rot || 0);
+  return shapeRings(it, tol).map(ring => ring.map(q => { const p = V.add(V.rot(q, r), [it.x, it.y]); return fr ? V.rot(p, -fr) : p; }));
+}
+function shapeFromRings(rings, src, fr, rotDeg) {
+  const b = polyBBox(rings.flat()), w = Math.max(1, b.w), h = Math.max(1, b.h), c = fr ? V.rot([b.cx, b.cy], fr) : [b.cx, b.cy];
+  const it = Object.assign(clone(src), { id: uid('it'), shape: 'path', x: c[0], y: c[1], w, h, rot: rotDeg, radius: 0 });
+  it.rings = rings.map(r => r.map(q => [round((q[0] - b.cx) / w, 1e6), round((q[1] - b.cy) / h, 1e6)]));
+  return it;
+}
+/* Combine shape items on a page. The result keeps the look of the back-most shape
+   (fragment: of the front-most shape over each piece) and takes its place in the
+   stacking order. Returns the new items, [] when nothing is left, null when there
+   are too few shapes. */
+function combineShapes(page, list, mode) {
+  if (!COMBINE_MODES.some(m => m[0] === mode)) mode = 'union';
+  const items = [...new Set(list)].filter(it => it && it.type === 'shape' && page.items.includes(it)).sort((a, b) => page.items.indexOf(a) - page.items.indexOf(b));
+  if (items.length < (mode === 'fragment' ? 1 : 2)) return null;
+  const r0 = items[0].rot || 0, same = items.every(it => Math.abs((((it.rot || 0) - r0) % 360 + 540) % 360 - 180) < 0.01), fr = same ? rad(r0) : 0;
+  const regions = boolOp(items.map(it => ({ rings: shapeWorldRings(it, 0.05, fr) })), mode);
+  const pieces = mode === 'fragment' ? regions.flatMap(r => ringPieces(r.rings).map(rings => ({ rings, src: r.src }))) : regions;
+  if (!pieces.length) return [];
+  const out = pieces.map(p => shapeFromRings(p.rings, items[p.src], fr, same ? r0 : 0)), at = page.items.indexOf(items[0]);
+  page.items = page.items.filter(it => !items.includes(it));
+  page.items.splice(at, 0, ...out);
+  return out;
+}
+/* how many separate pieces a shape has (outer rings) */
+function shapePieceCount(it) { return it.shape === 'path' ? shapeRings(it).filter(r => polyArea(r) > 0).length || 1 : 1; }
+
 /* ================= images ================= */
 const lumCache = new Map();
 const procCache = new Map();
@@ -1160,7 +1514,28 @@ function drawItem(ctx, it) {
     else if (it.type === 'text') drawTextItem(ctx, it);
     else if (it.type === 'effect') drawEffect(ctx, it);
     else if (it.type === 'image') drawImageItem(ctx, it);
+    else if (it.type === 'shape') drawShape(ctx, it);
   } catch (err) { console.error(err); }
+  ctx.restore();
+}
+function drawShape(ctx, it) {
+  const path = traceShape(new Path2D(), it), hw = Math.max(0.5, it.w / 2), hh = Math.max(0.5, it.h / 2);
+  if (it.fill && it.fill !== 'none') {
+    if (!TONE_PATTERNS.includes(it.pattern)) { ctx.fillStyle = it.fill; ctx.fill(path); }
+    else { ctx.save(); ctx.clip(path); tonePattern(ctx, it, hw, hh, it.fill); ctx.restore(); }
+  }
+  const sw = +it.sw || 0;
+  if (!(sw > 0) || !it.stroke || it.stroke === 'none') return;
+  const al = it.salign === 'inside' || it.salign === 'outside' ? it.salign : 'center', lw = al === 'center' ? sw : sw * 2;
+  ctx.save();
+  ctx.strokeStyle = it.stroke; ctx.lineWidth = lw; ctx.miterLimit = 10;
+  ctx.lineJoin = it.join === 'round' || it.join === 'bevel' ? it.join : 'miter';
+  ctx.lineCap = it.line === 'dotted' || it.join === 'round' ? 'round' : 'butt';
+  if (it.line === 'dashed') ctx.setLineDash([sw * 3, sw * 2]);
+  else if (it.line === 'dotted') ctx.setLineDash([0.001, lw * 2]);
+  if (al === 'inside') ctx.clip(path);
+  else if (al === 'outside') { const R = Math.hypot(hw, hh) * 2 + lw * 2 + 10, inv = new Path2D(); inv.rect(-R, -R, R * 2, R * 2); traceShape(inv, it); ctx.clip(inv, 'evenodd'); }
+  ctx.stroke(path);
   ctx.restore();
 }
 function drawBubble(ctx, it) {
@@ -1263,16 +1638,21 @@ function drawFlash(ctx, it) {
 function drawTone(ctx, it) {
   const hw = it.w / 2, hh = it.h / 2, clipP = new Path2D();
   if (it.shape === 'ellipse') clipP.ellipse(0, 0, Math.max(1, hw), Math.max(1, hh), 0, 0, TAU); else clipP.rect(-hw, -hh, it.w, it.h);
-  ctx.save(); ctx.clip(clipP); ctx.fillStyle = it.color; ctx.strokeStyle = it.color;
-  if (it.pattern === 'solid') { ctx.fill(clipP); ctx.restore(); return; }
-  const s = Math.max(1.5, it.pitch), Rr = Math.hypot(hw, hh) + s, n = Math.ceil(Rr / s), a = rad(it.angle || 0), ca = Math.cos(a), sa = Math.sin(a);
+  ctx.save(); ctx.clip(clipP);
+  if (it.pattern === 'solid') { ctx.fillStyle = it.color; ctx.fill(clipP); } else tonePattern(ctx, it, hw, hh, it.color);
+  ctx.restore();
+}
+/* screentone over the box ±hw × ±hh (the caller sets the clip): dots / grad / lines / cross */
+function tonePattern(ctx, it, hw, hh, color) {
+  ctx.fillStyle = color; ctx.strokeStyle = color;
+  const s = Math.max(1.5, +it.pitch || 0), Rr = Math.hypot(hw, hh) + s, n = Math.ceil(Rr / s), a = rad(it.angle || 0), ca = Math.cos(a), sa = Math.sin(a);
   if (it.pattern === 'lines' || it.pattern === 'cross') {
     ctx.lineWidth = Math.max(0.2, s * clamp(it.dens, 0.02, 1)); ctx.beginPath();
     for (const d of it.pattern === 'cross' ? [a, a + Math.PI / 2] : [a]) {
       const c = Math.cos(d), sn = Math.sin(d);
       for (let i = -n; i <= n; i++) { const o = i * s, px = -sn * o, py = c * o; ctx.moveTo(px - c * Rr, py - sn * Rr); ctx.lineTo(px + c * Rr, py + sn * Rr); }
     }
-    ctx.stroke(); ctx.restore(); return;
+    ctx.stroke(); return;
   }
   const ga = rad(it.gang || 0), gx = Math.cos(ga), gy = Math.sin(ga), ext = Math.abs(gx) * hw + Math.abs(gy) * hh || 1;
   ctx.beginPath();
@@ -1286,23 +1666,31 @@ function drawTone(ctx, it) {
     const r = s * Math.sqrt(Math.min(d, 1) / Math.PI);
     ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU); cnt++;
   }
-  ctx.fill(); ctx.restore();
+  ctx.fill();
 }
 
 /* ================= editor state & view ================= */
-const ed = { pi: 0, sel: null, tool: 'select', view: { z: 0.3, ox: 0, oy: 0 }, autoFit: true, drag: null, hover: null, dropPanel: null, space: false, guides: true, numbers: false, clip: null, inline: null, changes: 0, saved: 0, pinch: null, lastTap: null, exp: null, pick: null, fontTarget: null, isSample: false };
+const ed = { pi: 0, sel: null, sels: [], tool: 'select', view: { z: 0.3, ox: 0, oy: 0 }, autoFit: true, drag: null, hover: null, dropPanel: null, space: false, guides: true, numbers: false, clip: null, inline: null, changes: 0, saved: 0, pinch: null, lastTap: null, exp: null, pick: null, fontTarget: null, isSample: false, vedit: null, pen: null, multiMode: false, vtap: null };
 const stage = $('#stage'), cv = $('#cv'), ctx = cv.getContext('2d'), inlineEd = $('#inlineEd');
 const BLUE = '#1689d6', RED = '#e2352a';
 let dpr = 1, cw = 0, ch = 0, rafId = 0;
 const curPage = () => project.pages[ed.pi];
 function findPanel(id, page) { page = page || curPage(); return page.panels.find(p => p.id === id) || null; }
 function findItem(id, page) { page = page || curPage(); return page.items.find(p => p.id === id) || null; }
+/* ed.sel is the main selection; ed.sels lists the items when several are selected
+   (it only counts while it holds ed.sel, so clearing ed.sel clears both) */
 function selectedObj() {
   if (!ed.sel || !project) return null;
+  if (ed.sels.length > 1 && ed.sels.includes(ed.sel)) {
+    const objs = ed.sels.map(id => findItem(id)).filter(Boolean);
+    if (objs.length > 1) return { kind: 'multi', objs, obj: findItem(ed.sel) || objs[objs.length - 1] };
+  }
   const pn = findPanel(ed.sel); if (pn) return { kind: 'panel', obj: pn };
   const it = findItem(ed.sel); if (it) return { kind: 'item', obj: it };
   return null;
 }
+function selItems() { const s = selectedObj(); return !s || s.kind === 'panel' ? [] : s.kind === 'multi' ? s.objs : [s.obj]; }
+const vEditing = it => !!it && it.type === 'shape' && it.shape === 'path' && ed.vedit === it.id;
 const S = (x, y) => [x * ed.view.z + ed.view.ox, y * ed.view.z + ed.view.oy];
 const toPage = sp => [(sp[0] - ed.view.ox) / ed.view.z, (sp[1] - ed.view.oy) / ed.view.z];
 function evPos(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
@@ -1363,8 +1751,55 @@ function drawOverlay() {
   if (ed.hover && !d) { const pn = findPanel(ed.hover); if (pn && pn.id !== ed.sel) { tracePoly(c, pn.pts); c.strokeStyle = ed.tool === 'knife' ? 'rgba(226,53,42,.65)' : 'rgba(22,137,214,.55)'; c.lineWidth = 2; c.stroke(); } }
   if (d && d.type === 'knife' && d.moved) drawKnife(c, d);
   const sel = selectedObj();
-  if (sel && !(d && d.type === 'knife')) { if (sel.kind === 'panel') drawPanelSel(c, sel.obj); else drawItemSel(c, sel.obj); }
+  if (sel && !(d && d.type === 'knife')) {
+    if (sel.kind === 'panel') drawPanelSel(c, sel.obj);
+    else if (sel.kind === 'multi') for (const it of sel.objs) drawItemBox(c, it);
+    else if (vEditing(sel.obj)) drawVertexEdit(c, sel.obj);
+    else drawItemSel(c, sel.obj);
+  }
+  if (d && d.type === 'marquee' && d.moved) {
+    const a = S(...d.a), b = S(...d.b);
+    c.fillStyle = 'rgba(22,137,214,.08)'; c.strokeStyle = BLUE; c.lineWidth = 1; c.setLineDash([4, 3]);
+    c.fillRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
+    c.strokeRect(Math.min(a[0], b[0]) + 0.5, Math.min(a[1], b[1]) + 0.5, Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])); c.setLineDash([]);
+  }
+  if (ed.pen) drawPen(c);
   c.restore();
+}
+function itemCorners(it) { return itemPageCorners(it).map(q => S(q[0], q[1])); }
+function drawItemBox(c, it) {
+  const cs = itemCorners(it);
+  c.beginPath(); cs.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.closePath();
+  c.strokeStyle = BLUE; c.lineWidth = 1.5; c.setLineDash(it.locked ? [5, 4] : []); c.stroke(); c.setLineDash([]);
+}
+/* outline, edge midpoints (drag to add a vertex) and vertices of a shape being edited */
+function shapeScreenRings(it) { const r = rad(it.rot || 0); return shapeRings(it).map(ring => ring.map(q => S(...V.add([it.x, it.y], V.rot(q, r))))); }
+function drawVertexEdit(c, it) {
+  const rings = shapeScreenRings(it);
+  c.strokeStyle = BLUE; c.lineWidth = 1.5;
+  for (const ring of rings) { c.beginPath(); ring.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.closePath(); c.stroke(); }
+  c.lineWidth = 1.2;
+  for (const ring of rings) for (let i = 0; i < ring.length; i++) {
+    const a = ring[i], b = ring[(i + 1) % ring.length];
+    if (Math.hypot(b[0] - a[0], b[1] - a[1]) < 26) continue;
+    c.fillStyle = '#fff'; c.beginPath(); c.arc((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, 4, 0, TAU); c.fill(); c.stroke();
+  }
+  c.lineWidth = 1.5;
+  for (const ring of rings) for (const q of ring) { c.fillStyle = BLUE; c.strokeStyle = '#fff'; c.fillRect(q[0] - 5, q[1] - 5, 10, 10); c.strokeRect(q[0] - 5, q[1] - 5, 10, 10); }
+}
+/* the polygon being drawn with the 自由形 tool */
+function drawPen(c) {
+  const pen = ed.pen, pts = pen.pts.map(q => S(q[0], q[1]));
+  if (!pts.length) return;
+  const cur = pen.cur ? S(...pen.cur) : null, closing = pen.close && pts.length >= 3;
+  c.beginPath(); pts.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); if (cur && !closing) c.lineTo(cur[0], cur[1]); c.closePath();
+  c.fillStyle = 'rgba(22,137,214,.1)'; c.fill();
+  c.strokeStyle = BLUE; c.lineWidth = 2; c.beginPath(); pts.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.stroke();
+  if (cur || closing) { const e = closing ? pts[0] : cur, l = pts[pts.length - 1]; c.setLineDash([5, 4]); c.beginPath(); c.moveTo(l[0], l[1]); c.lineTo(e[0], e[1]); c.stroke(); c.setLineDash([]); }
+  pts.forEach((q, i) => {
+    if (i === 0) { c.fillStyle = closing ? BLUE : '#fff'; c.strokeStyle = BLUE; c.lineWidth = 2; c.beginPath(); c.arc(q[0], q[1], closing ? 8 : 6, 0, TAU); c.fill(); c.stroke(); }
+    else { c.fillStyle = '#fff'; c.strokeStyle = BLUE; c.lineWidth = 1.5; c.fillRect(q[0] - 4, q[1] - 4, 8, 8); c.strokeRect(q[0] - 4, q[1] - 4, 8, 8); }
+  });
 }
 function drawPanelHint(c, pn, z) {
   const b = polyBBox(pn.pts);
@@ -1423,10 +1858,8 @@ function itemHandles(it) {
 }
 function drawItemSel(c, it) {
   const sz = itemSize(it), r = rad(it.rot || 0);
-  const cs = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, y]) => S(...V.add([it.x, it.y], V.rot([x * sz.w / 2, y * sz.h / 2], r))));
   if (it.clip) { const pn = findPanel(it.clip); if (pn) { tracePoly(c, pn.pts); c.strokeStyle = 'rgba(22,137,214,.5)'; c.setLineDash([3, 3]); c.lineWidth = 1; c.stroke(); c.setLineDash([]); } }
-  c.beginPath(); cs.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); c.closePath();
-  c.strokeStyle = BLUE; c.lineWidth = 1.5; c.setLineDash(it.locked ? [5, 4] : []); c.stroke(); c.setLineDash([]);
+  drawItemBox(c, it);
   if (it.locked) return;
   for (const h of itemHandles(it)) {
     const s = S(h.pos[0], h.pos[1]);
@@ -1445,6 +1878,7 @@ function drawItemSel(c, it) {
 /* ================= hit testing ================= */
 function hitItem(it, p) {
   const l = V.rot(V.sub(p, [it.x, it.y]), -rad(it.rot || 0)), sz = itemSize(it), tol = 4 / ed.view.z;
+  if (it.type === 'shape') return shapeHit(it, l, tol);
   if (Math.abs(l[0]) <= sz.w / 2 + tol && Math.abs(l[1]) <= sz.h / 2 + tol) return true;
   if (it.type === 'bubble') {
     const g = tailGeom(it);
@@ -1468,7 +1902,16 @@ function hitStack(p) {
   return out;
 }
 function handleAt(sp, sel) {
-  if (!sel) return null;
+  if (!sel || sel.kind === 'multi') return null;
+  if (sel.kind === 'item' && vEditing(sel.obj)) {
+    const rings = shapeScreenRings(sel.obj);
+    for (let r = 0; r < rings.length; r++) for (let i = 0; i < rings[r].length; i++) { const q = rings[r][i]; if (Math.hypot(q[0] - sp[0], q[1] - sp[1]) <= 9) return { k: 'svert', r, i }; }
+    for (let r = 0; r < rings.length; r++) for (let i = 0; i < rings[r].length; i++) {
+      const a = rings[r][i], b = rings[r][(i + 1) % rings[r].length];
+      if (Math.hypot(b[0] - a[0], b[1] - a[1]) >= 26 && Math.hypot((a[0] + b[0]) / 2 - sp[0], (a[1] + b[1]) / 2 - sp[1]) <= 8) return { k: 'smid', r, i };
+    }
+    return null;
+  }
   if (sel.kind === 'panel') {
     const pts = sel.obj.pts, n = pts.length;
     for (let i = 0; i < n; i++) { const s = S(...pts[i]); if (Math.hypot(s[0] - sp[0], s[1] - sp[1]) <= 9) return { k: 'vertex', i }; }
@@ -1480,19 +1923,21 @@ function handleAt(sp, sel) {
   return null;
 }
 function handleCursor(h, sel) {
-  if (h.k === 'vertex') return 'move';
+  if (h.k === 'vertex' || h.k === 'svert') return 'move';
+  if (h.k === 'smid') return 'copy';
   if (h.k === 'edge') { const p = sel.obj.pts, a = p[h.i], b = p[(h.i + 1) % p.length], ang = Math.abs(Math.atan2(b[1] - a[1], b[0] - a[0])) % Math.PI; return ang < 0.5 || ang > Math.PI - 0.5 ? 'ns-resize' : Math.abs(ang - Math.PI / 2) < 0.5 ? 'ew-resize' : 'move'; }
   if (h.k === 'tail' || h.k === 'center') return 'crosshair';
   if (h.k === 'rotate') return 'grab';
   const a = (Math.atan2(h.hy, h.hx) + rad(sel.obj.rot || 0)) * 180 / Math.PI, i = ((Math.round(a / 45) % 4) + 4) % 4;
   return ['ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize'][i];
 }
-function setCursor(c) { cv.style.cursor = c || (ed.space || ed.tool === 'hand' ? 'grab' : ed.tool === 'knife' ? 'crosshair' : 'default'); }
+function setCursor(c) { cv.style.cursor = c || (ed.space || ed.tool === 'hand' ? 'grab' : ed.tool === 'knife' || ed.tool === 'pen' ? 'crosshair' : 'default'); }
 
 /* ================= pointer handling ================= */
 const pointers = new Map();
 function onDown(e) {
   if (e.button === 2 || !project) return;
+  closeShapeMenu();
   if (document.body.classList.contains('show-left') || document.body.classList.contains('show-right')) { if (window.matchMedia('(max-width: 1180px)').matches) closeDrawers(); }
   if (ed.inline) closeInline();
   try { cv.setPointerCapture(e.pointerId); } catch (err) { }
@@ -1501,13 +1946,24 @@ function onDown(e) {
   const sp = evPos(e), p = toPage(sp);
   if (e.button === 1 || ed.space || ed.tool === 'hand') { ed.drag = { type: 'view', sp, ox: ed.view.ox, oy: ed.view.oy, moved: false }; setCursor('grabbing'); return; }
   if (ed.tool === 'knife') { ed.drag = { type: 'knife', a: p, b: p, sp, moved: false }; return; }
+  if (ed.tool === 'pen') { penDown(p, sp, e); return; }
   const sel = selectedObj(), h = handleAt(sp, sel);
   if (h) { startHandle(sel, h, p, sp, e); return; }
   const hits = hitStack(p);
+  if (e.shiftKey || e.ctrlKey || e.metaKey || ed.multiMode) {
+    // add to or remove from the selection; dragging from an empty spot selects by area
+    const t = hits.find(x => x.kind === 'item');
+    if (!t) { ed.drag = { type: 'marquee', a: p, b: p, sp, moved: false }; return; }
+    const was = selItems().some(it => it.id === t.id);
+    if (!was) toggleSel(t.id);
+    startMultiMove(p, sp, was ? { off: t.id } : {});
+    return;
+  }
   if (!hits.length) { if (sel) select(null); ed.drag = { type: 'view', sp, ox: ed.view.ox, oy: ed.view.oy, moved: false }; return; }
   let t = hits[0];
-  if (e.altKey && sel) { const i = hits.findIndex(x => x.id === sel.obj.id); if (i >= 0) t = hits[(i + 1) % hits.length]; }
-  if (!sel || sel.obj.id !== t.id) select(t.id);
+  if (sel && sel.kind === 'multi' && t.kind === 'item' && sel.objs.some(it => it.id === t.id)) { startMultiMove(p, sp, { only: t.id }); return; }
+  if (e.altKey && sel && sel.kind !== 'multi') { const i = hits.findIndex(x => x.id === sel.obj.id); if (i >= 0) t = hits[(i + 1) % hits.length]; }
+  if (!sel || sel.kind === 'multi' || sel.obj.id !== t.id) select(t.id);
   if (t.kind === 'item') { const o = findItem(t.id); ed.drag = { type: 'move', id: o.id, start: p, ox: o.x, oy: o.y, sp, moved: false }; }
   else { const o = findPanel(t.id); ed.drag = o.img ? { type: 'panimg', id: o.id, start: p, ocx: o.img.cx, ocy: o.img.cy, sp, moved: false } : { type: 'view', sp, ox: ed.view.ox, oy: ed.view.oy, moved: false, keep: true }; }
 }
@@ -1524,20 +1980,66 @@ function startHandle(sel, h, p, sp, e) {
     return;
   }
   const it = sel.obj;
+  if (h.k === 'svert' || h.k === 'smid') {
+    const o = clone(it);
+    let i = h.i;
+    if (h.k === 'smid') { const ring = o.rings[h.r], a = ring[i], b = ring[(i + 1) % ring.length]; ring.splice(++i, 0, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]); it.rings = clone(o.rings); requestRender(); }
+    ed.drag = { type: 'svert', id: it.id, o, r: h.r, i, added: h.k === 'smid', alt: e.altKey, start: p, sp, moved: false };
+    return;
+  }
   ed.drag = { type: h.k, id: it.id, o: clone(it), h, start: p, sp, moved: false };
+}
+function startMultiMove(p, sp, o) {
+  const items = selItems().filter(it => !it.locked);
+  ed.drag = Object.assign({ type: 'multimove', start: p, sp, moved: false, orig: items.map(it => [it.id, it.x, it.y]) }, o);
+}
+/* an item dragged onto another panel follows it, if it is drawn inside panels */
+function reclipMoved(it) { if (it && it.clip) { const pn = panelAtPoint(curPage(), [it.x, it.y]); if (pn && pn.id !== it.clip) it.clip = pn.id; } }
+function moveShapeVertex(d, q) {
+  const it = findItem(d.id), o = d.o;
+  if (!it) return;
+  const rings = o.rings.map(r => r.map(v => [v[0] * o.w, v[1] * o.h]));
+  rings[d.r][d.i] = V.rot(V.sub(q, [o.x, o.y]), -rad(o.rot || 0));
+  Object.assign(it, { x: o.x, y: o.y, rot: o.rot });
+  setPathRings(it, rings);
+}
+function deleteShapeVertex(it, r, i) {
+  const rings = shapeRings(it);
+  if (rings[r].length > 3) rings[r].splice(i, 1);
+  else if (rings.length > 1) rings.splice(r, 1);
+  else { toast('頂点は3つより少なくできません'); return false; }
+  setPathRings(it, rings);
+  return true;
+}
+function itemPageCorners(it) { const sz = itemSize(it), r = rad(it.rot || 0); return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, y]) => V.add([it.x, it.y], V.rot([x * sz.w / 2, y * sz.h / 2], r))); }
+function marqueeSelect(a, b) {
+  const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]), y1 = Math.min(a[1], b[1]), y2 = Math.max(a[1], b[1]);
+  const inside = curPage().items.filter(it => !it.hidden && !it.locked && itemPageCorners(it).every(q => q[0] >= x1 && q[0] <= x2 && q[1] >= y1 && q[1] <= y2));
+  if (!inside.length) return;
+  const ids = selItems().map(it => it.id);
+  for (const it of inside) if (!ids.includes(it.id)) ids.push(it.id);
+  selectMany(ids);
 }
 function onMove(e) {
   if (pointers.has(e.pointerId)) pointers.set(e.pointerId, [e.clientX, e.clientY]);
   if (pointers.size >= 2) { doPinch(); return; }
   if (!project) return;
   const sp = evPos(e), p = toPage(sp), d = ed.drag;
-  if (!d) { updateHover(sp, p); return; }
+  if (!d) { updateHover(sp, p, e); return; }
   if (!d.moved) { if (Math.hypot(sp[0] - d.sp[0], sp[1] - d.sp[1]) < 3) return; d.moved = true; }
   const sh = e.shiftKey;
   switch (d.type) {
     case 'view': ed.view.ox = d.ox + sp[0] - d.sp[0]; ed.view.oy = d.oy + sp[1] - d.sp[1]; ed.autoFit = false; setCursor('grabbing'); break;
     case 'knife': d.b = snapKnife(d.a, p, sh, e.altKey); break;
     case 'move': { const it = findItem(d.id); if (!it) break; let dx = p[0] - d.start[0], dy = p[1] - d.start[1]; if (sh) { if (Math.abs(dx) > Math.abs(dy)) dy = 0; else dx = 0; } it.x = d.ox + dx; it.y = d.oy + dy; break; }
+    case 'multimove': {
+      let dx = p[0] - d.start[0], dy = p[1] - d.start[1];
+      if (sh) { if (Math.abs(dx) > Math.abs(dy)) dy = 0; else dx = 0; }
+      for (const [id, x, y] of d.orig) { const it = findItem(id); if (it) { it.x = x + dx; it.y = y + dy; } }
+      break;
+    }
+    case 'marquee': d.b = p; break;
+    case 'svert': moveShapeVertex(d, e.altKey ? p : snapPt(p, null)); break;
     case 'panimg': { const pn = findPanel(d.id); if (!pn || !pn.img) break; pn.img.cx = d.ocx + p[0] - d.start[0]; pn.img.cy = d.ocy + p[1] - d.start[1]; setCursor('grabbing'); break; }
     case 'resize': doResize(d, p, sh); break;
     case 'scale': {
@@ -1567,8 +2069,25 @@ function onUp(e) {
   const sp = evPos(e);
   if (d.type === 'knife') { if (d.moved) doKnife(d.a, d.b); requestRender(); return; }
   if (d.type === 'view') { setCursor(); if (!d.moved) checkDoubleTap(sp); return; }
+  if (d.type === 'marquee') { if (d.moved) marqueeSelect(d.a, d.b); requestRender(); return; }
+  if (d.type === 'multimove') {
+    if (d.moved) { for (const [id] of d.orig) reclipMoved(findItem(id)); commit(); requestRender(); return; }
+    if (d.off) toggleSel(d.off); else if (d.only) select(d.only);
+    checkDoubleTap(sp); return;
+  }
+  if (d.type === 'svert') {
+    const it = findItem(d.id);
+    if (it && !d.moved && !d.added) {
+      // Alt+click or a double click on a vertex removes it
+      const now = performance.now(), vt = ed.vtap, dbl = !!vt && vt.id === it.id && vt.r === d.r && vt.i === d.i && now - vt.t < 400;
+      ed.vtap = dbl ? null : { id: it.id, r: d.r, i: d.i, t: now };
+      if ((d.alt || dbl) && deleteShapeVertex(it, d.r, d.i)) commit();
+      requestRender(); return;
+    }
+    commit(); buildProps(); requestRender(); return;
+  }
   if (d.moved) {
-    if (d.type === 'move') { const it = findItem(d.id); if (it && it.clip) { const pn = panelAtPoint(curPage(), [it.x, it.y]); if (pn && pn.id !== it.clip) it.clip = pn.id; } }
+    if (d.type === 'move') reclipMoved(findItem(d.id));
     if (d.type === 'resize' || d.type === 'scale' || d.type === 'rotate') syncSizeFields();
     if (d.type === 'vertex') refitEffects(curPage(), d.id, d.orig);
     if (d.type === 'edge') for (const [id, pts] of d.orig) refitEffects(curPage(), id, pts);
@@ -1588,15 +2107,17 @@ function onDouble(p) {
       const it = findItem(h.id);
       if (it.type === 'bubble' || it.type === 'text') { select(it.id); openInline(it); return; }
       if (it.type === 'image') { select(it.id); return; }
+      if (it.type === 'shape') { if (ed.sel !== it.id) select(it.id); if (it.shape === 'path') toggleVertexEdit(it); return; }
       continue;
     }
     select(h.id); pickImageFor(h.id); return;
   }
 }
-function updateHover(sp, p) {
+function updateHover(sp, p, e) {
   let cur = '', hov = null;
   if (ed.space || ed.tool === 'hand') cur = 'grab';
   else if (ed.tool === 'knife') { cur = 'crosshair'; const pn = panelAtPoint(curPage(), p); hov = pn ? pn.id : null; }
+  else if (ed.tool === 'pen') { cur = 'crosshair'; penHover(p, sp, e || {}); }
   else {
     const sel = selectedObj(), h = handleAt(sp, sel);
     if (h) cur = handleCursor(h, sel);
@@ -1641,6 +2162,38 @@ function snapKnife(a, b, shift, alt) {
   if (shift || Math.abs(ang - sn) < rad(3.5)) ang = sn;
   return [a[0] + Math.cos(ang) * L, a[1] + Math.sin(ang) * L];
 }
+/* ---- 自由形: click to add vertices, close on the first point / double click / Enter ---- */
+function penDown(p, sp, e) {
+  const pen = ed.pen || (ed.pen = { pts: [], cur: null, close: false, last: null }), n = pen.pts.length, now = performance.now(), lt = pen.last;
+  if (n >= 3) {
+    const f = S(...pen.pts[0]);
+    if (Math.hypot(sp[0] - f[0], sp[1] - f[1]) <= 10 || (lt && now - lt.t < 400 && Math.hypot(sp[0] - lt.sp[0], sp[1] - lt.sp[1]) < 10)) { finishPen(); return; }
+  }
+  const q = n && !e.altKey ? snapKnife(pen.pts[n - 1], p, e.shiftKey, false) : p;
+  pen.last = { t: now, sp };
+  if (n) { const l = S(...pen.pts[n - 1]), s = S(...q); if (Math.hypot(s[0] - l[0], s[1] - l[1]) < 3) return; }
+  pen.pts.push(q); pen.cur = null; pen.close = false;
+  requestRender();
+}
+function penHover(p, sp, e) {
+  const pen = ed.pen;
+  if (!pen || !pen.pts.length) return;
+  const n = pen.pts.length, f = S(...pen.pts[0]);
+  pen.cur = e.altKey ? p : snapKnife(pen.pts[n - 1], p, e.shiftKey, false);
+  pen.close = n >= 3 && Math.hypot(sp[0] - f[0], sp[1] - f[1]) <= 10;
+  requestRender();
+}
+function finishPen() {
+  const pen = ed.pen;
+  ed.pen = null;
+  const pts = pen ? cleanPoly(pen.pts) : [];
+  if (pts.length < 3 || Math.abs(polyArea(pts)) < 1) { if (pen && pen.pts.length) toast('頂点を3つ以上、面になるように置いてください'); requestRender(); return; }
+  const it = makePathShape([pts]);
+  curPage().items.push(it);
+  setTool('select'); select(it.id); commit();
+  toast('自由形の図形を作りました。ダブルクリックで頂点を編集できます');
+}
+function cancelPen() { ed.pen = null; requestRender(); }
 function snapPt(p, exId) {
   const tol = 8 / ed.view.z, page = curPage(), F = innerFrame(), W = project.page.w, H = project.page.h;
   const xs = [F.x, F.x + F.w, 0, W], ys = [F.y, F.y + F.h, 0, H];
@@ -1747,6 +2300,7 @@ function restoreSnap(s) {
   project.name = o.name; project.page = o.page; project.layout = o.layout; project.pages = o.pages;
   ed.pi = clamp(ed.pi, 0, project.pages.length - 1);
   if (ed.sel && !selectedObj()) ed.sel = null;
+  if (ed.vedit && !vEditing(findItem(ed.vedit))) endVertexEdit();
   ed.changes++; layoutCache.clear();
   $('#projName').value = project.name;
   if (sized) fitView();
@@ -1760,20 +2314,95 @@ function updateDirty() { $('#dirty').classList.toggle('on', ed.changes !== ed.sa
 function select(id) {
   if (ed.inline && ed.inline !== id) closeInline();
   ed.sel = id || null;
+  ed.sels = ed.sel && findItem(ed.sel) ? [ed.sel] : [];
+  if (ed.vedit && ed.vedit !== ed.sel) endVertexEdit(true);
   buildProps(); renderLayers(); requestRender();
   $('#bRight').classList.toggle('ping', !!id);
 }
+/* select several items (the last one becomes the main selection) */
+function selectMany(ids) {
+  ids = [...new Set(ids)].filter(id => findItem(id));
+  if (ids.length < 2) { select(ids[0] || null); return; }
+  if (ed.inline) closeInline();
+  ed.sels = ids; ed.sel = ids[ids.length - 1];
+  if (ed.vedit) endVertexEdit(true);
+  buildProps(); renderLayers(); requestRender();
+  $('#bRight').classList.add('ping');
+}
+function toggleSel(id) {
+  if (!findItem(id)) { select(id); return; }
+  const ids = selItems().map(it => it.id), i = ids.indexOf(id);
+  if (i >= 0) ids.splice(i, 1); else ids.push(id);
+  selectMany(ids);
+}
+function selectAll() { const ids = curPage().items.filter(it => !it.hidden && !it.locked).map(it => it.id); if (ids.length) selectMany(ids); }
 function setTool(t) {
+  if (t !== 'pen' && ed.pen) cancelPen();
+  if (t !== 'select' && ed.vedit) endVertexEdit();
   ed.tool = t;
   $$('#rail [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+  $('#bShape').classList.toggle('on', t === 'pen');
   $('#hint').textContent = HINTS[t] || '';
   setCursor(); requestRender();
 }
 const HINTS = {
-  select: 'クリックで選択・ドラッグで移動／コマ内のドラッグで画像を動かし、ホイールで拡大縮小／Alt+クリックで背面を選択',
+  select: 'クリックで選択・ドラッグで移動／Shift+クリックで複数選択（空いた所からShift+ドラッグで範囲選択）／Alt+クリックで背面を選択',
   knife: 'コマの上をドラッグして分割（水平・垂直に吸着／Shiftで15°刻み／Altで自由な角度）',
   hand: 'ドラッグで表示を移動／Ctrl+ホイールで拡大縮小',
+  pen: 'クリックで頂点を追加／最初の点をクリックか、ダブルクリック・Enterで完成／Backspaceで1つ戻す／Escでやめる（Shiftで15°刻み）',
+  vedit: '頂点をドラッグで移動／辺の中央の○をドラッグで頂点を追加／Alt+クリックかダブルクリックで頂点を削除／Escで終了',
 };
+/* ---- vertex editing of shapes ---- */
+function startVertexEdit(it) {
+  if (!it || it.type !== 'shape' || it.locked) return;
+  if (ed.sel !== it.id || selectedObj().kind !== 'item') select(it.id);
+  if (it.shape !== 'path') { shapeToPath(it); commit(); toast('頂点を動かせる「自由形」に変換しました'); }
+  ed.vedit = it.id;
+  $('#hint').textContent = HINTS.vedit;
+  buildProps(); requestRender();
+}
+function endVertexEdit(quiet) {
+  if (!ed.vedit) return;
+  ed.vedit = null;
+  $('#hint').textContent = HINTS[ed.tool] || '';
+  if (!quiet) { buildProps(); requestRender(); }
+}
+function toggleVertexEdit(it) { if (ed.vedit === it.id) endVertexEdit(); else startVertexEdit(it); }
+/* ---- shapes ---- */
+const SHAPE_PRESETS = {
+  rect: ['rect', {}], rrect: ['rect', { radius: 3 }], ellipse: ['ellipse', {}], triangle: ['polygon', { sides: 3 }], polygon: ['polygon', { sides: 6 }], star: ['star', {}],
+};
+function addShape(preset) {
+  if (!project) return;
+  if (preset === 'pen') { select(null); setTool('pen'); toast('クリックして頂点を置いていきます。最初の点をクリックすると完成です', 4000); return; }
+  const [kind, o0] = SHAPE_PRESETS[preset] || SHAPE_PRESETS.rect, u = U(), o = Object.assign({}, o0);
+  if (o.radius) o.radius *= u;
+  setTool('select');
+  const pn = targetPanel(), c = pn ? polyCentroid(pn.pts) : viewCenterPage(), it = makeShape(kind, c[0], c[1], o);
+  if (pn) { const b = polyBBox(pn.pts), k = Math.min(1, b.w * 0.6 / it.w, b.h * 0.6 / it.h); it.w *= k; it.h *= k; it.radius *= k; }
+  curPage().items.push(it);
+  select(it.id); commit();
+}
+const COMBINE_DONE = { union: '1つの図形に合体しました', subtract: '後ろの図形から型抜きしました', intersect: '重なった部分だけを残しました', exclude: '重なった部分をくり抜きました', fragment: '重なりの境目で分割しました' };
+function combineSel(mode) {
+  const shapes = selItems().filter(it => it.type === 'shape' && !it.locked);
+  if (shapes.length < (mode === 'fragment' ? 1 : 2)) { toast('結合するには、ロックしていない図形を2つ以上選んでください'); return; }
+  const out = combineShapes(curPage(), shapes, mode);
+  if (!out || !out.length) { toast(mode === 'intersect' ? 'すべてが重なっている部分がないため、交差できません' : '結果が空になるため、結合できません'); return; }
+  selectMany(out.map(it => it.id)); commit();
+  toast(mode === 'fragment' ? out.length + 'つの図形に' + (shapes.length > 1 ? '分割しました' : 'ばらばらにしました') : COMBINE_DONE[mode] || '結合しました');
+}
+function alignSel(where) {
+  const items = selItems().filter(it => !it.locked);
+  if (items.length < 2) return;
+  const boxes = items.map(it => polyBBox(itemPageCorners(it))), B = polyBBox(boxes.flatMap(b => [[b.x1, b.y1], [b.x2, b.y2]]));
+  items.forEach((it, i) => {
+    const b = boxes[i];
+    if (where === 'left') it.x += B.x1 - b.x1; else if (where === 'hcenter') it.x += B.cx - b.cx; else if (where === 'right') it.x += B.x2 - b.x2;
+    else if (where === 'top') it.y += B.y1 - b.y1; else if (where === 'vcenter') it.y += B.cy - b.cy; else if (where === 'bottom') it.y += B.y2 - b.y2;
+  });
+  commit(); requestRender();
+}
 function targetPanel() {
   const s = selectedObj();
   if (s && s.kind === 'panel') return s.obj;
@@ -1818,14 +2447,21 @@ function deleteSel() {
   const s = selectedObj();
   if (!s) return;
   const page = curPage();
-  if (s.kind === 'item') page.items = page.items.filter(x => x !== s.obj);
+  if (s.kind === 'multi') page.items = page.items.filter(x => !s.objs.includes(x));
+  else if (s.kind === 'item') page.items = page.items.filter(x => x !== s.obj);
   else { page.panels = page.panels.filter(x => x !== s.obj); page.tpl = null; page.items = page.items.filter(it => !(it.clip === s.obj.id && it.type === 'effect')); for (const it of page.items) if (it.clip === s.obj.id) it.clip = null; }
   select(null); commit();
 }
+/* the selected items in stacking order (back to front) */
+const selInOrder = s => curPage().items.filter(x => s.objs.includes(x));
 function duplicateSel() {
   const s = selectedObj();
   if (!s) return;
   const page = curPage(), u = U(), o = clone(s.obj);
+  if (s.kind === 'multi') {
+    const copies = selInOrder(s).map(it => Object.assign(clone(it), { id: uid('it'), x: it.x + 2 * u, y: it.y + 2 * u, locked: false }));
+    page.items.push(...copies); selectMany(copies.map(c => c.id)); commit(); return;
+  }
   if (s.kind === 'item') { o.id = uid('it'); o.x += 2 * u; o.y += 2 * u; o.locked = false; page.items.splice(page.items.indexOf(s.obj) + 1, 0, o); }
   else { o.id = uid('pn'); o.pts = o.pts.map(q => [q[0] + 2 * u, q[1] + 2 * u]); if (o.img) { o.img.cx += 2 * u; o.img.cy += 2 * u; } page.panels.push(o); }
   select(o.id); commit();
@@ -1833,7 +2469,15 @@ function duplicateSel() {
 function orderSel(where) {
   const s = selectedObj();
   if (!s) return;
-  const page = curPage(), arr = s.kind === 'item' ? page.items : page.panels, i = arr.indexOf(s.obj);
+  const page = curPage();
+  if (s.kind === 'multi') {
+    const set = new Set(s.objs), a = page.items;
+    if (where === 'top' || where === 'bottom') { const mine = a.filter(x => set.has(x)), rest = a.filter(x => !set.has(x)); page.items = where === 'top' ? rest.concat(mine) : mine.concat(rest); }
+    else if (where === 'up') { for (let i = a.length - 2; i >= 0; i--) if (set.has(a[i]) && !set.has(a[i + 1])) [a[i], a[i + 1]] = [a[i + 1], a[i]]; }
+    else for (let i = 1; i < a.length; i++) if (set.has(a[i]) && !set.has(a[i - 1])) [a[i], a[i - 1]] = [a[i - 1], a[i]];
+    commit(); renderLayers(); return;
+  }
+  const arr = s.kind === 'item' ? page.items : page.panels, i = arr.indexOf(s.obj);
   arr.splice(i, 1);
   const j = where === 'top' ? arr.length : where === 'bottom' ? 0 : where === 'up' ? Math.min(arr.length, i + 1) : Math.max(0, i - 1);
   arr.splice(j, 0, s.obj); commit(); renderLayers();
@@ -1841,14 +2485,30 @@ function orderSel(where) {
 function nudge(dx, dy) {
   const s = selectedObj();
   if (!s) return;
-  if (s.kind === 'item') { if (s.obj.locked) return; s.obj.x += dx; s.obj.y += dy; }
+  if (s.kind === 'multi') { for (const it of s.objs) if (!it.locked) { it.x += dx; it.y += dy; } }
+  else if (s.kind === 'item') { if (s.obj.locked) return; s.obj.x += dx; s.obj.y += dy; }
   else if (s.obj.img) { s.obj.img.cx += dx; s.obj.img.cy += dy; }
   requestRender(); scheduleCommit();
 }
-function copySel() { const s = selectedObj(); if (!s) return false; ed.clip = { kind: s.kind, obj: clone(s.obj) }; toast(s.kind === 'item' ? 'コピーしました' : 'コマをコピーしました'); return true; }
+function copySel() {
+  const s = selectedObj();
+  if (!s) return false;
+  if (s.kind === 'multi') { ed.clip = { kind: 'items', objs: clone(selInOrder(s)) }; toast(s.objs.length + '個をコピーしました'); return true; }
+  ed.clip = { kind: s.kind, obj: clone(s.obj) }; toast(s.kind === 'item' ? 'コピーしました' : 'コマをコピーしました'); return true;
+}
 function pasteClip() {
   if (!ed.clip) return;
-  const page = curPage(), u = U(), o = clone(ed.clip.obj);
+  const page = curPage(), u = U();
+  if (ed.clip.kind === 'items') {
+    const out = ed.clip.objs.map(src => Object.assign(clone(src), { id: uid('it'), x: src.x + 2 * u, y: src.y + 2 * u }));
+    let lost = false;
+    for (const o of out) if (o.clip && !findPanel(o.clip)) { o.clip = 'gone'; lost = true; }
+    page.items.push(...out);
+    if (lost) reclip(page);
+    ed.clip.objs = clone(out);
+    selectMany(out.map(o => o.id)); commit(); return;
+  }
+  const o = clone(ed.clip.obj);
   if (ed.clip.kind === 'item') { o.id = uid('it'); o.x += 2 * u; o.y += 2 * u; if (o.clip && !findPanel(o.clip)) { o.clip = 'gone'; page.items.push(o); reclip(page); } else page.items.push(o); }
   else { o.id = uid('pn'); o.pts = o.pts.map(q => [q[0] + 2 * u, q[1] + 2 * u]); if (o.img) { if (!project.assets[o.img.asset]) o.img = null; else { o.img.cx += 2 * u; o.img.cy += 2 * u; } } page.panels.push(o); }
   ed.clip.obj = clone(o);
@@ -1887,6 +2547,7 @@ function isTyping(t) { return !!t && (t.tagName === 'TEXTAREA' || t.tagName === 
 function onKey(e) {
   if (!project) return;
   if (!$('#modal').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeModal(); } return; }
+  if (!$('#shapeMenu').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeShapeMenu(true); } return; }
   const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if (mod && k === 's') { e.preventDefault(); saveProject(); return; }
   if (mod && k === 'o') { e.preventDefault(); openProjectDialog(); return; }
@@ -1895,6 +2556,7 @@ function onKey(e) {
   if (mod && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
   if (mod && k === 'y') { e.preventDefault(); redo(); return; }
   if (mod && k === 'd') { e.preventDefault(); duplicateSel(); return; }
+  if (mod && k === 'a') { e.preventDefault(); selectAll(); return; }
   if (mod && k === 'c') { copySel(); return; }
   if (mod && k === 'x') { if (copySel()) deleteSel(); return; }
   if (mod && k === '0') { e.preventDefault(); fitView(); return; }
@@ -1902,16 +2564,26 @@ function onKey(e) {
   if (mod && k === '-') { e.preventDefault(); zoomAt(cw / 2, ch / 2, 0.8); return; }
   if (mod || e.altKey) return;
   if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'range' && (k.startsWith('arrow') || k === 'home' || k === 'end')) return;
+  if (ed.pen && ed.pen.pts.length && (k === 'enter' || k === 'escape' || k === 'delete' || k === 'backspace')) {
+    e.preventDefault();
+    if (k === 'enter') finishPen(); else if (k === 'escape') cancelPen(); else { ed.pen.pts.pop(); requestRender(); }
+    return;
+  }
   if (k === 'delete' || k === 'backspace') { e.preventDefault(); deleteSel(); }
-  else if (k === 'escape') { if (ed.drag && ed.drag.type === 'knife') ed.drag = null; select(null); setTool('select'); }
+  else if (k === 'escape') { if (ed.vedit) { endVertexEdit(); return; } if (ed.drag && (ed.drag.type === 'knife' || ed.drag.type === 'marquee')) ed.drag = null; select(null); setTool('select'); }
   else if (k === 'v') setTool('select');
   else if (k === 'k') setTool('knife');
   else if (k === 'h') setTool('hand');
+  else if (k === 'p') { select(null); setTool('pen'); }
   else if (k === ' ') { e.preventDefault(); if (document.activeElement && document.activeElement.tagName === 'BUTTON') document.activeElement.blur(); if (!ed.space) { ed.space = true; setCursor('grab'); } }
   else if (k.startsWith('arrow')) { e.preventDefault(); const st = e.shiftKey ? 10 : 1; nudge(k === 'arrowleft' ? -st : k === 'arrowright' ? st : 0, k === 'arrowup' ? -st : k === 'arrowdown' ? st : 0); }
   else if (k === 'pagedown') gotoPage(Math.min(project.pages.length - 1, ed.pi + 1));
   else if (k === 'pageup') gotoPage(Math.max(0, ed.pi - 1));
-  else if (k === 'enter') { const s = selectedObj(); if (s && s.kind === 'item' && (s.obj.type === 'bubble' || s.obj.type === 'text')) { e.preventDefault(); openInline(s.obj); } }
+  else if (k === 'enter') {
+    const s = selectedObj();
+    if (s && s.kind === 'item' && (s.obj.type === 'bubble' || s.obj.type === 'text')) { e.preventDefault(); openInline(s.obj); }
+    else if (s && s.kind === 'item' && s.obj.type === 'shape' && s.obj.shape === 'path') { e.preventDefault(); toggleVertexEdit(s.obj); }
+  }
 }
 
 /* ================= small UI helpers ================= */
@@ -1974,7 +2646,7 @@ function area(obj, key, o = {}) {
   return t;
 }
 function btn(label, fn, o = {}) {
-  const b = el('button', { type: 'button', class: 'pb' + (o.cls ? ' ' + o.cls : ''), title: o.title || null }, o.icon ? icon(o.icon) : null, label ? el('span', { text: label }) : null);
+  const b = el('button', { type: 'button', class: 'pb' + (o.cls ? ' ' + o.cls : ''), title: o.title || null, 'aria-label': !label && o.title ? o.title : null }, o.icon ? icon(o.icon) : null, label ? el('span', { text: label }) : null);
   b.addEventListener('click', fn);
   return b;
 }
@@ -1995,11 +2667,13 @@ function buildProps() {
   root.textContent = '';
   const s = selectedObj();
   if (!s) propsPage(root);
+  else if (s.kind === 'multi') propsMulti(root, s.objs);
   else if (s.kind === 'panel') propsPanel(root, s.obj);
   else if (s.obj.type === 'bubble') propsBubble(root, s.obj);
   else if (s.obj.type === 'text') propsText(root, s.obj);
   else if (s.obj.type === 'effect') propsEffect(root, s.obj);
   else if (s.obj.type === 'image') propsImageItem(root, s.obj);
+  else if (s.obj.type === 'shape') propsShape(root, s.obj);
   if (root.dataset.sel === String(selId)) root.scrollTop = keep;
   root.dataset.sel = String(selId);
 }
@@ -2026,13 +2700,15 @@ function propsPage(root) {
     field('作品名', (() => { const i = el('input', { type: 'text', id: 'c-name', value: project.name }); i.addEventListener('input', () => { project.name = i.value; $('#projName').value = i.value; scheduleCommit(); }); return i; })()),
     field('ページの背景', color(page, 'bg', { def: '#ffffff' })),
     chk(ed, 'guides', '基本枠のガイド（水色の点線）を表示', { silent: true, on: requestRender }),
-    chk(ed, 'numbers', 'コマの読み順番号を表示', { silent: true, on: requestRender })));
+    chk(ed, 'numbers', 'コマの読み順番号を表示', { silent: true, on: requestRender }),
+    multiModeChk()));
   root.append(sec('使い方',
     el('ul', { class: 'tips' },
       el('li', {}, el('b', { text: '画像' }), '：コマへドラッグ＆ドロップ、またはコマをダブルクリック。複数まとめてドロップすると空きコマへ読み順に入ります'),
       el('li', {}, el('b', { text: 'コマ割り' }), '：ツールを選んでコマの上をドラッグすると分割。選んだコマの角や辺をドラッグで変形（Altで単独）'),
       el('li', {}, el('b', { text: '吹き出し' }), '：ダブルクリックでセリフを編集。赤い丸をドラッグでしっぽの向き'),
       el('li', {}, el('b', { text: '重なり' }), '：背面のものは Alt+クリック か「レイヤー」タブで選べます'),
+      el('li', {}, el('b', { text: '図形' }), '：左の「図形」から追加。Shift+クリックで複数選ぶと、合体・型抜きなどの結合や整列ができます'),
       el('li', {}, el('b', { text: 'ショートカット' }), '：Ctrl+Z 元に戻す／Ctrl+D 複製／Delete 削除／Space+ドラッグ 表示移動'))));
 }
 function imageAdjust(im) {
@@ -2119,6 +2795,8 @@ function shapePicker(it, on) {
   }
   return g;
 }
+/* touch screens have no Shift key: this makes every tap add to (or remove from) the selection */
+function multiModeChk() { return chk(ed, 'multiMode', '複数選択モード（タップで選択に追加・解除）', { id: 'multimode', silent: true }); }
 function commonProps(root, it) {
   const clipSt = { on: !!it.clip };
   root.append(sec('配置',
@@ -2131,6 +2809,7 @@ function commonProps(root, it) {
     } }),
     it.clip ? btn('下のコマを選ぶ', () => select(it.clip), { title: 'この効果が入っているコマを選択します' }) : null,
     chk(it, 'locked', 'ロック（キャンバスでは選ばれなくなります）', { on: () => { renderLayers(); requestRender(); } }),
+    multiModeChk(),
     el('div', { class: 'btns' }, btn('最前面', () => orderSel('top')), btn('前へ', () => orderSel('up')), btn('後ろへ', () => orderSel('down')), btn('最背面', () => orderSel('bottom'))),
     el('div', { class: 'btns' }, btn('複製', duplicateSel, { icon: 'copy' }), btn('削除', deleteSel, { icon: 'trash', cls: 'danger' }))));
 }
@@ -2202,6 +2881,91 @@ function propsEffect(root, it) {
     it.clip ? btn('コマいっぱいに合わせる', () => { const pn = findPanel(it.clip); if (!pn) return; const b = polyBBox(pn.pts), pad = (pn.bw ?? project.layout.bw); it.x = b.cx; it.y = b.cy; it.w = b.w + pad * 2; it.h = b.h + pad * 2; it.rot = 0; commit(); buildProps(); }) : null));
   commonProps(root, it);
 }
+/* ---- shapes ---- */
+let lastFill = '#ffffff', lastStroke = '#111111';
+function figurePicker(it) {
+  const g = el('div', { class: 'shapes four', id: 'c-figure' }), r = it.radius / Math.max(1, Math.min(it.w, it.h));
+  for (const [v, l] of SHAPE_KINDS) {
+    if (v === 'path') continue;
+    const ar = v === 'polygon' || v === 'star' ? shapeAspect({ shape: v, sides: it.sides, inner: it.inner }) : v === 'rect' ? 1.45 : 1.3;
+    const h = 44, w = Math.min(84, h * ar), c = el('canvas', { width: 92, height: 60 }), x = c.getContext('2d');
+    x.translate(46, 30);
+    drawShape(x, { shape: v, w, h, sides: it.sides, inner: it.inner, radius: v === 'rect' ? r * Math.min(w, h) : 0, fill: '#ffffff', stroke: '#141414', sw: 3, pattern: 'solid', line: 'solid', join: 'miter', salign: 'center' });
+    const b = el('button', { type: 'button', class: 'shape' + (it.shape === v ? ' on' : ''), 'aria-pressed': String(it.shape === v), title: l }, c, el('span', { text: l }));
+    b.addEventListener('click', () => { if (it.shape === v) return; it.shape = v; changed(); buildProps(); });
+    g.append(b);
+  }
+  return g;
+}
+function toneFields(it) {
+  return [
+    field('模様', seg(it, 'pattern', [['dots', '網点'], ['grad', 'グラデ'], ['lines', '斜線'], ['cross', '格子']], { rebuild: true })),
+    field('目の細かさ', range(it, 'pitch', { min: 3, max: 80, step: 0.5 })),
+    field(it.pattern === 'grad' ? '濃さ（始点）' : '濃さ', range(it, 'dens', { min: 0.02, max: 1, step: 0.01, pct: true })),
+    it.pattern === 'grad' ? field('濃さ（終点）', range(it, 'd2', { min: 0, max: 1, step: 0.01, pct: true })) : null,
+    it.pattern === 'grad' ? field('グラデの向き', range(it, 'gang', { min: -180, max: 180, unit: '°' })) : null,
+    field('網の角度', range(it, 'angle', { min: 0, max: 180, unit: '°' })),
+  ];
+}
+function propsShape(root, it) {
+  const editing = vEditing(it), path = it.shape === 'path', pieces = shapePieceCount(it);
+  const verts = path ? shapeRings(it).reduce((n, r) => n + r.length, 0) : 0;
+  root.append(head(shapeName(it), path ? '頂点 ' + verts + '個' + (pieces > 1 ? '・' + pieces + 'つの部分' : '') : '図形'));
+  const title = root.querySelector('.phead h2'), retitle = () => { title.textContent = shapeName(it); };
+  root.append(sec('形',
+    path ? note('クリックで描いた形や、結合してできた形です。頂点を動かして形を変えられます。') : figurePicker(it),
+    it.shape === 'rect' ? field('角の丸み', range(it, 'radius', { min: 0, max: Math.max(1, Math.floor(Math.min(it.w, it.h) / 2)), step: 0.5, on: retitle })) : null,
+    it.shape === 'polygon' ? field('角の数', range(it, 'sides', { min: 3, max: 12, on: retitle })) : null,
+    it.shape === 'star' ? field('トゲの数', range(it, 'sides', { min: 3, max: 24 })) : null,
+    it.shape === 'star' ? field('へこみ', range(it, 'inner', { min: 0.1, max: 0.95, step: 0.01, pct: true })) : null,
+    el('div', { class: 'btns' },
+      path ? null : btn('縦横比をそろえる', () => { const a = Math.sqrt(shapeAspect(it)), s = Math.sqrt(it.w * it.h); it.w = round(s * a, 10); it.h = round(s / a, 10); commit(); requestRender(); buildProps(); }, { title: '正方形・正円・正多角形の形に戻します（面積はそのまま）' }),
+      btn(editing ? '頂点の編集を終える' : '頂点を編集', () => toggleVertexEdit(it), { icon: 'vertex', cls: editing ? 'strong' : '' }),
+      pieces > 1 ? btn('ばらばらにする', () => combineSel('fragment'), { icon: 'cb-fragment', title: '離れている部分を、別々の図形に分けます' }) : null),
+    editing ? note('頂点をドラッグで移動、辺の中央の○をドラッグで頂点を追加、Alt+クリックかダブルクリックで頂点を削除。Escで終わります。')
+      : path ? null : note('「頂点を編集」を押すと、頂点を自由に動かせる「自由形」に変換します。')));
+  const fm = { m: !it.fill || it.fill === 'none' ? 'none' : TONE_PATTERNS.includes(it.pattern) ? 'tone' : 'solid' };
+  root.append(sec('塗り',
+    field('塗り', seg(fm, 'm', [['none', 'なし'], ['solid', 'ベタ'], ['tone', 'トーン']], { id: 'fillmode', silent: true, on: () => {
+      if (it.fill && it.fill !== 'none') lastFill = it.fill;
+      if (fm.m === 'none') it.fill = '';
+      else if (fm.m === 'solid') { it.fill = it.fill || lastFill || '#ffffff'; it.pattern = 'solid'; }
+      else { it.fill = !it.fill || /^#f{6}$/i.test(it.fill) ? '#111111' : it.fill; if (!TONE_PATTERNS.includes(it.pattern)) it.pattern = 'dots'; }
+      commit(); requestRender(); buildProps();
+    } })),
+    fm.m === 'none' ? null : field(fm.m === 'tone' ? 'トーンの色' : '色', color(it, 'fill', { def: '#ffffff' })),
+    ...(fm.m === 'tone' ? toneFields(it) : [])));
+  const sm = { m: it.stroke && it.stroke !== 'none' && it.sw > 0 ? 'on' : 'none' }, on = sm.m === 'on';
+  root.append(sec('線',
+    field('線', seg(sm, 'm', [['none', 'なし'], ['on', 'あり']], { id: 'strokemode', silent: true, on: () => {
+      if (sm.m === 'none') { if (it.stroke && it.stroke !== 'none') lastStroke = it.stroke; it.stroke = ''; }
+      else { it.stroke = it.stroke && it.stroke !== 'none' ? it.stroke : lastStroke || '#111111'; if (!(it.sw > 0)) it.sw = Math.max(1, Math.round(0.25 * U() * 2) / 2); }
+      commit(); requestRender(); buildProps();
+    } })),
+    on ? el('div', { class: 'two' }, field('色', color(it, 'stroke', { id: 'scolor', def: '#111111' })), field('太さ', num(it, 'sw', { min: 0.5, step: 0.5 }))) : null,
+    on ? field('種類', seg(it, 'line', [['solid', '実線'], ['dashed', '破線'], ['dotted', '点線']])) : null,
+    on ? field('角の形', seg(it, 'join', [['miter', 'とがる'], ['round', '丸い'], ['bevel', '面取り']])) : null,
+    on ? field('線の位置', seg(it, 'salign', [['center', '中央'], ['inside', '内側'], ['outside', '外側']])) : null));
+  root.append(sec('大きさ',
+    el('div', { class: 'two' }, field('幅', num(it, 'w', { min: 1 })), field('高さ', num(it, 'h', { min: 1 }))),
+    note('Shift+クリックで図形を2つ以上選ぶと、合体・型抜き・交差・中マド・分割ができます。')));
+  commonProps(root, it);
+}
+const COMBINE_HELP = { union: '重ねた図形を1つにまとめます', subtract: 'いちばん後ろの図形から、前にある図形の形をくり抜きます', intersect: 'すべての図形が重なっている部分だけを残します', exclude: '重なっている部分をくり抜きます（中マド）', fragment: '重なりの境目で、ばらばらの図形に分けます' };
+function propsMulti(root, objs) {
+  const shapes = objs.filter(it => it.type === 'shape');
+  root.append(head(objs.length + '個を選択中', 'Shift+クリックで選択に追加・解除できます'));
+  root.append(sec('図形の結合',
+    shapes.length >= 2 ? el('div', { class: 'combos' }, COMBINE_MODES.map(([m, l]) => btn(l, () => combineSel(m), { icon: 'cb-' + m, title: COMBINE_HELP[m] }))) : null,
+    note(shapes.length >= 2 ? '結果は、いちばん後ろの図形の塗りと線を引き継ぎます（分割は、各部分でいちばん前にあった図形）。' + (shapes.length < objs.length ? '図形以外は結合されません。' : '')
+      : '図形を2つ以上選ぶと、合体・型抜き・交差・中マド・分割ができます。')));
+  root.append(sec('整列',
+    el('div', { class: 'btns' }, [['left', '左揃え'], ['hcenter', '左右中央揃え'], ['right', '右揃え'], ['top', '上揃え'], ['vcenter', '上下中央揃え'], ['bottom', '下揃え']].map(([w, t]) => btn('', () => alignSel(w), { icon: 'al-' + w, cls: 'icon', title: t })))));
+  root.append(sec('操作',
+    el('div', { class: 'btns' }, btn('最前面', () => orderSel('top')), btn('前へ', () => orderSel('up')), btn('後ろへ', () => orderSel('down')), btn('最背面', () => orderSel('bottom'))),
+    el('div', { class: 'btns' }, btn('複製', duplicateSel, { icon: 'copy' }), btn('削除', deleteSel, { icon: 'trash', cls: 'danger' })),
+    multiModeChk()));
+}
 function propsImageItem(root, it) {
   const a = project.assets[it.asset];
   root.append(head('画像（フリー配置）', 'コマの枠を飛び出す人物などに'));
@@ -2225,21 +2989,23 @@ function itemLabel(it) {
   if (it.type === 'bubble') return '吹き出し「' + t(it.text) + '」';
   if (it.type === 'text') return 'テキスト「' + t(it.text) + '」';
   if (it.type === 'image') return '画像 ' + t(project.assets[it.asset] ? project.assets[it.asset].name : '');
+  if (it.type === 'shape') return '図形 ' + shapeName(it);
   return EFFECT_NAMES[it.kind] || '効果';
 }
-function itemIcon(it) { return it.type === 'bubble' ? 'bubble' : it.type === 'text' ? (it.sw2 > 0 ? 'sfx' : 'text') : it.type === 'image' ? 'image' : it.kind; }
+function shapeIcon(it) { return it.shape === 'rect' ? (it.radius > 0 ? 'rrect' : 'rect') : it.shape === 'polygon' ? (Math.round(it.sides) === 3 ? 'triangle' : 'polygon') : it.shape === 'path' ? 'pen' : it.shape; }
+function itemIcon(it) { return it.type === 'bubble' ? 'bubble' : it.type === 'text' ? (it.sw2 > 0 ? 'sfx' : 'text') : it.type === 'image' ? 'image' : it.type === 'shape' ? shapeIcon(it) : it.kind; }
 function renderLayers() {
   clearTimeout(layersTimer);
   const root = $('#layers');
   if (!root || !project) return;
   root.textContent = '';
-  const page = curPage();
-  root.append(el('div', { class: 'lhead', text: 'オブジェクト（上ほど手前）' }));
+  const page = curPage(), chosen = new Set(selItems().map(x => x.id));
+  root.append(el('div', { class: 'lhead', text: 'オブジェクト（上ほど手前・Shift+クリックで複数選択）' }));
   if (!page.items.length) root.append(note('まだありません。左のツールから吹き出しや効果を追加できます。'));
   for (let i = page.items.length - 1; i >= 0; i--) {
     const it = page.items[i], name = itemLabel(it);
-    root.append(el('div', { class: 'lyr' + (it.id === ed.sel ? ' on' : '') + (it.hidden ? ' off' : '') },
-      el('button', { type: 'button', class: 'nm', title: name, onclick: () => select(it.id) }, icon(itemIcon(it)), el('span', { text: name }), it.clip ? el('small', { text: 'コマ内' }) : null),
+    root.append(el('div', { class: 'lyr' + (chosen.has(it.id) ? ' on' : '') + (it.hidden ? ' off' : '') },
+      el('button', { type: 'button', class: 'nm', title: name, onclick: ev => (ev.shiftKey || ev.ctrlKey || ev.metaKey || ed.multiMode ? toggleSel(it.id) : select(it.id)) }, icon(itemIcon(it)), el('span', { text: name }), it.clip ? el('small', { text: 'コマ内' }) : null),
       el('button', { type: 'button', class: 'ib', title: it.hidden ? '表示する' : '隠す', 'aria-label': it.hidden ? '表示する' : '隠す', onclick: () => { it.hidden = !it.hidden; commit(); renderLayers(); } }, icon(it.hidden ? 'eyeoff' : 'eye')),
       el('button', { type: 'button', class: 'ib', title: it.locked ? 'ロックを解除' : 'ロックする', 'aria-label': it.locked ? 'ロックを解除' : 'ロックする', onclick: () => { it.locked = !it.locked; commit(); renderLayers(); if (it.id === ed.sel) buildProps(); requestRender(); } }, icon(it.locked ? 'lock' : 'unlock'))));
   }
@@ -2276,7 +3042,7 @@ function renderPages() {
 }
 function gotoPage(i) {
   if (i === ed.pi || i < 0 || i >= project.pages.length) return;
-  closeInline(); flushCommit();
+  closeInline(); flushCommit(); cancelPen(); endVertexEdit(true);
   ed.pi = i; ed.sel = null;
   renderPages(); buildProps(); renderLayers(); requestRender();
 }
@@ -2461,9 +3227,39 @@ function createNew(st) {
 function clearCaches() { imgCache.clear(); lumCache.clear(); procCache.clear(); layoutCache.clear(); fontReq.clear(); libThumbs.clear(); }
 function refreshAll() { $('#projName').value = project.name; renderPages(); renderLibrary(); buildProps(); renderLayers(); requestRender(); updateHistButtons(); updateDirty(); }
 
+/* ================= shape menu (図形) ================= */
+function openShapeMenu() {
+  const m = $('#shapeMenu'), b = $('#bShape');
+  if (!m.hidden) { closeShapeMenu(); return; }
+  m.hidden = false; b.setAttribute('aria-expanded', 'true');
+  const r = b.getBoundingClientRect(), mw = m.offsetWidth, mh = m.offsetHeight, W = window.innerWidth, H = window.innerHeight;
+  const side = getComputedStyle($('#rail')).flexDirection === 'column';
+  m.style.left = (side ? r.right + 6 : clamp(r.left + r.width / 2 - mw / 2, 8, Math.max(8, W - mw - 8))) + 'px';
+  m.style.top = (side ? clamp(r.top, 8, Math.max(8, H - mh - 8)) : Math.max(8, r.top - mh - 6)) + 'px';
+  const f = m.querySelector('button');
+  if (f) f.focus();
+}
+function closeShapeMenu(focusBack) {
+  const m = $('#shapeMenu');
+  if (!m || m.hidden) return;
+  m.hidden = true; $('#bShape').setAttribute('aria-expanded', 'false');
+  if (focusBack) $('#bShape').focus();
+}
+
 /* ================= wiring ================= */
 function wireUI() {
   for (const i of $$('i[data-i]')) i.innerHTML = iconSVG(i.dataset.i);
+  $('#bShape').addEventListener('click', openShapeMenu);
+  for (const b of $$('#shapeMenu [data-shape]')) b.addEventListener('click', () => { closeShapeMenu(); addShape(b.dataset.shape); });
+  $('#shapeMenu').addEventListener('keydown', e => {
+    e.stopPropagation();
+    const items = $$('#shapeMenu button'), i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus(); }
+    else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); items[e.key === 'Home' ? 0 : items.length - 1].focus(); }
+    else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); closeShapeMenu(true); }
+  });
+  document.addEventListener('pointerdown', e => { if (!$('#shapeMenu').hidden && !e.target.closest('#shapeMenu, #bShape')) closeShapeMenu(); }, true);
+  window.addEventListener('resize', () => closeShapeMenu());
   $('#bNew').addEventListener('click', openNew);
   $('#bOpen').addEventListener('click', openProjectDialog);
   $('#bSave').addEventListener('click', saveProject);
@@ -2496,7 +3292,7 @@ function wireUI() {
   cv.addEventListener('pointermove', onMove);
   cv.addEventListener('pointerup', onUp);
   cv.addEventListener('pointercancel', onUp);
-  cv.addEventListener('pointerleave', () => { if (!ed.drag && ed.hover) { ed.hover = null; requestRender(); } });
+  cv.addEventListener('pointerleave', () => { if (!ed.drag && ed.hover) { ed.hover = null; requestRender(); } if (ed.pen && ed.pen.cur) { ed.pen.cur = null; ed.pen.close = false; requestRender(); } });
   cv.addEventListener('wheel', onWheel, { passive: false });
   cv.addEventListener('contextmenu', e => e.preventDefault());
   inlineEd.addEventListener('input', onInlineInput);

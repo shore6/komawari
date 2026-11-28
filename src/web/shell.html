@@ -54,8 +54,19 @@
     <button type="button" data-add="flash" title="ウニフラッシュを追加"><i data-i="flash"></i><span>ウニフラ</span></button>
     <button type="button" data-add="tone" title="スクリーントーンを追加"><i data-i="tone"></i><span>トーン</span></button>
     <hr>
+    <button type="button" id="bShape" title="図形を追加（四角形・楕円・多角形・星・自由形）" aria-haspopup="menu" aria-expanded="false" aria-controls="shapeMenu"><i data-i="shapes"></i><span>図形</span></button>
     <button type="button" data-add="image" title="画像を読み込んで配置"><i data-i="image"></i><span>画像</span></button>
   </nav>
+  <div id="shapeMenu" class="flyout" role="menu" aria-label="図形を追加" hidden>
+    <button type="button" role="menuitem" data-shape="rect"><i data-i="rect"></i><span>四角形</span></button>
+    <button type="button" role="menuitem" data-shape="rrect"><i data-i="rrect"></i><span>角丸四角形</span></button>
+    <button type="button" role="menuitem" data-shape="ellipse"><i data-i="ellipse"></i><span>楕円</span></button>
+    <button type="button" role="menuitem" data-shape="triangle"><i data-i="triangle"></i><span>三角形</span></button>
+    <button type="button" role="menuitem" data-shape="polygon"><i data-i="polygon"></i><span>多角形</span></button>
+    <button type="button" role="menuitem" data-shape="star"><i data-i="star"></i><span>星</span></button>
+    <hr>
+    <button type="button" role="menuitem" data-shape="pen" title="クリックで頂点を置いて描く (P)"><i data-i="pen"></i><span>自由形（クリックで描く）</span></button>
+  </div>
 
   <aside id="left" aria-label="ページと画像">
     <section class="pane pages">
