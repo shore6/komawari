@@ -1,48 +1,50 @@
-# komawari ガイド（LLM・エージェント向け）
+# komawari guide (for LLMs and agents)
 
-komawari は「コマワリ工房」のコアを切り出したCLIです。JSONでマンガのページ（コマ割り・画像・吹き出し・効果音・効果線・トーン・図形）を組み立て、PNG / JPEG / WebP に好きな解像度で書き出します。作品ファイル（`.manga.json`）はWebアプリ版コマワリ工房でそのまま開いて手直しできます。
+komawari is a CLI extracted from the core of "コマワリ工房" (Komawari Kobo). You build manga pages in JSON (panel layouts, images, speech bubbles, sound effects, effect lines, screentone, shapes) and export them as PNG / JPEG / WebP at any resolution. Project files (`.manga.json`) open as-is in the Komawari Kobo web app for manual touch-ups.
 
-出力はすべて1つのJSONです。`"ok": false` のときは `error` と `hint`（複数あれば `details`）を読んで直してください。`warnings` には重なり・はみ出し・長すぎる列・足りないフォントが出ます。
+Every command prints a single JSON object. When it contains `"ok": false`, read `error` and `hint` (and `details` when there are several problems) and fix the input. `warnings` reports overlaps, items sticking out of their panel, columns that are too long, and missing fonts.
 
-## 基本の流れ
+Note: error messages, hints and warnings are printed in Japanese. The common ones are listed under "Common errors" below.
 
-1. 形をつかむ（任意）: `komawari example work` でサンプルの `spec.json` と画像がコピーされる
-2. ページ全体を `spec.json` に書いて作る:
+## Basic workflow
+
+1. Get a feel for the format (optional): `komawari example work` copies a sample `spec.json` and its images
+2. Write the whole page in `spec.json` and build it:
    `komawari build spec.json -o story.manga.json --render previews/ --annotate --width 1000`
-3. `previews/*.png` を目で確認する。`--annotate` 付きだと、コマの読み順番号（青い丸）とアイテムのid（赤いラベル）が描き込まれる
-4. 直す点を操作の配列 `ops.json` に書いて適用する:
+3. Look at `previews/*.png`. With `--annotate`, panel reading-order numbers (blue circles) and item ids (red labels) are drawn on the image
+4. Write the fixes as an array of operations in `ops.json` and apply them:
    `komawari apply story.manga.json ops.json --render previews/ --annotate --width 1000`
-5. 仕上げの書き出し: `komawari render story.manga.json -o final/ --dpi 600`（`--width 3000`、`--scale 2` も可）
+5. Final export: `komawari render story.manga.json -o final/ --dpi 600` (`--width 3000` or `--scale 2` also work)
 
-状態の確認は `komawari info story.manga.json`（コマの番号・位置、アイテムのid・位置・テキスト、警告）。
+Inspect the current state with `komawari info story.manga.json` (panel numbers and positions, item ids / positions / text, warnings).
 
-## コマンド
+## Commands
 
-| コマンド | 内容 |
+| Command | Description |
 |---|---|
-| `guide` / `schema` / `templates` | このガイド／全項目のJSON一覧／テンプレート一覧 |
-| `example [dir]` | サンプル一式をコピー |
-| `new <file> [--size B5] [--pages N] [--template basic-5] [--title 名前]` | 空の作品を作る |
-| `build <spec.json\|-> [-o file] [--render [出力先]] [--annotate] [--width W]` | spec から作品を作る（`-` は標準入力） |
-| `apply <file> <ops.json\|-> [-o 別ファイル] [--render [出力先]] [--annotate]` | 操作を適用（既定は上書き保存） |
-| `validate <json>` | spec / ops を検査だけする |
-| `info <file> [--page N]` | 作品の中身をJSONで表示 |
-| `render <file> [-o 出力] [--page N\|1,3\|2-4\|all] [--width W\|--height H\|--scale S\|--dpi D] [--format png\|jpeg\|webp] [--quality 0.92] [--transparent] [--annotate]` | 画像に書き出す |
-| `fonts` / `fonts fetch <id…\|base\|all>` / `fonts add <ttf…> --project <file>` | フォントの状態／取得／作品への埋め込み |
+| `guide` / `schema` / `templates` | This guide / JSON list of every field / list of layout templates |
+| `example [dir]` | Copy the sample files |
+| `new <file> [--size B5] [--pages N] [--template basic-5] [--title name]` | Create an empty project |
+| `build <spec.json\|-> [-o file] [--render [outdir]] [--annotate] [--width W]` | Build a project from a spec (`-` reads stdin) |
+| `apply <file> <ops.json\|-> [-o other-file] [--render [outdir]] [--annotate]` | Apply operations (overwrites the file by default) |
+| `validate <json>` | Only validate a spec / ops file |
+| `info <file> [--page N]` | Print the project contents as JSON |
+| `render <file> [-o output] [--page N\|1,3\|2-4\|all] [--width W\|--height H\|--scale S\|--dpi D] [--format png\|jpeg\|webp] [--quality 0.92] [--transparent] [--annotate]` | Export images |
+| `fonts` / `fonts fetch <id…\|base\|all>` / `fonts add <ttf…> --project <file>` | Font status / download / embed into a project |
 
-`-o` がフォルダ（末尾が `/` か拡張子なし）なら `作品名_p01.png` のように並びます。`{n}` を含めるとページ番号に置き換わります。
+If `-o` is a folder (ends with `/` or has no extension), files are named like `<title>_p01.png`. If it contains `{n}`, that is replaced with the page number.
 
-## 座標と大きさ
+## Coordinates and sizes
 
-- `page` は1から。`panel` はそのページのコマを**読み順**（右綴じなら右上→左下）で数えた番号（1から）。コマ割りを変えると番号も変わるので、変えた後は `info` か `--annotate` で確かめる
-- `at`: 位置。`panel` を書くとそのコマの外接矩形に対する `[x, y]`（0〜1、左上が `[0, 0]`）。`panel` がないときはページの基本枠（余白の内側）に対する比率。名前でも書ける: `center` `top` `bottom` `left` `right` `top-left` `top-right` `bottom-left` `bottom-right`
-- `xy`: ページのピクセル座標 `[x, y]`（`at` の代わり）
-- `fontSize` はページのピクセル。`scale` は標準の文字サイズに対する倍率（吹き出し 2.1%、テキスト 2.2%、効果音 8% ×用紙の短辺）
-- `width` / `height` はコマ（または基本枠）に対する比率
-- 用紙: B5 は 1820×2570px（1mm=10px）。ほかに A5, A4, B4, square, 4:5, 9:16, 16:9, `"1600x2400"`
-- 吹き出しとテキストは、コマに置くと既定でコマの内側に収まるよう寄せられる（`"inside": false` で無効）
+- `page` starts at 1. `panel` is the panel's number in **reading order** on that page (right-to-left books: top-right to bottom-left), starting at 1. Changing the layout renumbers panels, so check with `info` or `--annotate` afterwards
+- `at`: position. With `panel`, it is `[x, y]` relative to the panel's bounding box (0–1, top-left is `[0, 0]`). Without `panel`, it is relative to the page's live area (inside the margins). Named positions also work: `center` `top` `bottom` `left` `right` `top-left` `top-right` `bottom-left` `bottom-right`
+- `xy`: page pixel coordinates `[x, y]` (instead of `at`)
+- `fontSize` is in page pixels. `scale` is a multiplier on the standard text size (bubbles 2.1%, text 2.2%, sfx 8% × the paper's short side)
+- `width` / `height` are ratios of the panel (or live area)
+- Paper: B5 is 1820×2570px (1mm = 10px). Also A5, A4, B4, square, 4:5, 9:16, 16:9, or `"1600x2400"`
+- Bubbles and text placed in a panel are nudged to stay inside it by default (disable with `"inside": false`)
 
-## spec（ページ全体を1つのJSONで書く）
+## spec (the whole project in one JSON)
 
 ```json
 {
@@ -76,42 +78,42 @@ komawari は「コマワリ工房」のコアを切り出したCLIです。JSON�
 }
 ```
 
-- トップ: `title` `size` `direction`（rtl / ltr）`margin`（px、数値か `[上下, 左右]` か `[上, 右, 下, 左]`）`gutter`（px、数値か `[左右の間, 上下の間]`）`border` `borderColor` `defaults`（`bubble` / `text` / `sfx` / `effect` / `shape` ごとの既定値）`pages`
-- ページ: `layout` `background` `panels`（読み順。`null` で飛ばす）`items`（`type` 付きの自由配置。`at` は基本枠に対する比率）`combine`（図形の結合。下の「図形」を参照）
-- コマ: `image`（パス文字列か画像の操作）`fill` `border`（0 で枠なし、null で標準）`borderColor` `effects` `shapes` `bubbles` `texts` `sfx` `items`
-- 画像パスは spec ファイルのある場所から相対。2ページ目以降で `layout` を省くと前のページと同じコマ割りになる
-- 中身は下の操作と同じ項目で書ける（`page` と `panel` は自動で入る）
+- Top level: `title` `size` `direction` (rtl / ltr) `margin` (px; a number, `[top/bottom, left/right]`, or `[top, right, bottom, left]`) `gutter` (px; a number or `[horizontal gap, vertical gap]`) `border` `borderColor` `defaults` (defaults per `bubble` / `text` / `sfx` / `effect` / `shape`) `pages`
+- Page: `layout` `background` `panels` (in reading order; `null` skips a panel) `items` (free placement with `type`; `at` is relative to the live area) `combine` (shape merging; see "Shapes" below)
+- Panel: `image` (a path string or an image operation) `fill` `border` (0 = no border, null = default) `borderColor` `effects` `shapes` `bubbles` `texts` `sfx` `items`
+- Image paths are relative to the spec file. If `layout` is omitted on page 2 or later, the previous page's layout is reused
+- Contents use the same fields as the operations below (`page` and `panel` are filled in automatically)
 
-### コマ割り（layout）
+### Panel layout (layout)
 
-- テンプレート: 別名・日本語名・番号のどれでも（`komawari templates`）。`single` `2-tier` `3-tier` `4koma` `grid-2x2` `4koma-2col` `basic-5` `basic-6` `3-tier-mid-split` `2-over-big` `big-over-2` `tall-1-plus-2` `3-columns` `diagonal-3` `diagonal-5` `action`
-- `rows`: `[[1], [1, 1], [2, 1]]` のように行ごとに列の幅比。列は**読み順**に並べる（右綴じなら最初が右）。行の高さ比は `{"h": 2, "cols": [1, 1]}`
-- `cuts`: `[[x1, y1, x2, y2], …]` 基本枠に対する0〜1の線分で順に切る。線分が触れたコマが、その線を延長した直線で分かれる。斜めのコマもこれで作る（例: 斜めの2段 `[[0, 0.55, 1, 0.42]]`）
+- Templates: by alias, Japanese name, or number (`komawari templates`). `single` `2-tier` `3-tier` `4koma` `grid-2x2` `4koma-2col` `basic-5` `basic-6` `3-tier-mid-split` `2-over-big` `big-over-2` `tall-1-plus-2` `3-columns` `diagonal-3` `diagonal-5` `action`
+- `rows`: column width ratios per row, e.g. `[[1], [1, 1], [2, 1]]`. List columns in **reading order** (for rtl, the first is the rightmost). Row height ratio: `{"h": 2, "cols": [1, 1]}`
+- `cuts`: `[[x1, y1, x2, y2], …]` line segments (0–1, relative to the live area) applied in order. Every panel the segment touches is split along the infinite line through it. Use this for diagonal panels too (e.g. a diagonal two-tier page: `[[0, 0.55, 1, 0.42]]`)
 
-## 操作（ops）
+## Operations (ops)
 
-`apply` には操作の配列（または `{"ops": [...]}`）を渡します。すべて検査してから順に実行し、途中で失敗したら保存しません。作ったアイテムのidが `results` に返ります（`"id"` を自分で付けてもよい）。
+`apply` takes an array of operations (or `{"ops": [...]}`). All operations are validated first, then executed in order; if any fails, nothing is saved. The ids of created items are returned in `results` (you may also set `"id"` yourself).
 
-| op | 主な項目 |
+| op | Main fields |
 |---|---|
-| `bubble` | `text`（必須）`page` `panel` `at`/`xy` `shape` `tail` `vertical` `font` `fontSize`/`scale` `bold` `lineHeight` `letterSpacing` `align` `color` `fill` `stroke` `strokeWidth` `dashed` `width` `height` `rotate` `opacity` `clip` `inside` `id` |
-| `text` | `text`（必須）＋文字の項目、`outline` `outlineWidth` `outline2` `outline2Width` `background`（ナレーション箱なら `"#ffffff"`） |
-| `sfx` | `text` の効果音向け既定（極太・二重フチ・少し傾き）。項目は `text` と同じ |
-| `image` | `src` か `asset`、`page` `panel` `fit`（cover / contain）`zoom` `focus` `at` `rotate` `flipX` `flipY` `gray` `brightness` `contrast` `mode`（normal / mono / halftone）`threshold` `dot`。`free: true` か `panel` なしで自由配置（`width` / `height` / `rotate` / `clip`） |
-| `effect` | `kind`（focus / speed / flash / tone、必須）`page` `panel` `at`+`size` ほか下記 |
-| `shape` | `shape`（rect / ellipse / polygon / star）か `points`（自由な多角形）、`page` `panel` `at`/`xy` `size` `width` `height` `fill` `stroke` `strokeWidth` ほか下記 |
-| `combine` | `ids`（図形の id、必須）`mode`（union / subtract / intersect / exclude / fragment、既定は union）`id` |
-| `layout` | `page` と `template` / `rows` / `cuts` のどれか。画像は読み順で新しいコマへ引き継がれる |
-| `split` | `page` `panel` `dir`（h=上下に分ける横線 / v=左右に分ける縦線）`at`（0〜1、既定0.5）`angle`（傾き°） |
+| `bubble` | `text` (required) `page` `panel` `at`/`xy` `shape` `tail` `vertical` `font` `fontSize`/`scale` `bold` `lineHeight` `letterSpacing` `align` `color` `fill` `stroke` `strokeWidth` `dashed` `width` `height` `rotate` `opacity` `clip` `inside` `id` |
+| `text` | `text` (required) + text fields, `outline` `outlineWidth` `outline2` `outline2Width` `background` (`"#ffffff"` for a narration box) |
+| `sfx` | `text` with sound-effect defaults (extra bold, double outline, slight tilt). Same fields as `text` |
+| `image` | `src` or `asset`, `page` `panel` `fit` (cover / contain) `zoom` `focus` `at` `rotate` `flipX` `flipY` `gray` `brightness` `contrast` `mode` (normal / mono / halftone) `threshold` `dot`. With `free: true` or no `panel`, it is placed freely (`width` / `height` / `rotate` / `clip`) |
+| `effect` | `kind` (focus / speed / flash / tone, required) `page` `panel` `at`+`size`, plus the fields below |
+| `shape` | `shape` (rect / ellipse / polygon / star) or `points` (free polygon), `page` `panel` `at`/`xy` `size` `width` `height` `fill` `stroke` `strokeWidth`, plus the fields below |
+| `combine` | `ids` (shape ids, required) `mode` (union / subtract / intersect / exclude / fragment; default union) `id` |
+| `layout` | `page` and one of `template` / `rows` / `cuts`. Images carry over to the new panels in reading order |
+| `split` | `page` `panel` `dir` (h = horizontal line splitting top/bottom / v = vertical line splitting left/right) `at` (0–1, default 0.5) `angle` (tilt in degrees) |
 | `panel` | `page` `panel` `fill` `border` `borderColor` |
-| `page.add` | `after`（既定は末尾）`template`/`rows`/`cuts`（省略で前のページと同じ）`background` |
-| `page.remove` / `page.move` / `page.set` | `page` ／ `page` `to` ／ `page` `background` |
-| `meta` | `title` `size`（中身ごと拡大縮小）`direction` `margin` `gutter` `border` `borderColor` |
-| `set` | `id`（または `page`+`panel`）と変えたい項目。種類ごとの項目がそのまま使える。`at` だけ書けば移動 |
-| `remove` | `id`（アイテムかコマ）、または `page`+`panel`（コマとその中の効果を削除） |
-| `clear` | `page` `what`（items / images / all） |
+| `page.add` | `after` (default: end) `template`/`rows`/`cuts` (omit to reuse the previous page's layout) `background` |
+| `page.remove` / `page.move` / `page.set` | `page` / `page` `to` / `page` `background` |
+| `meta` | `title` `size` (scales the contents too) `direction` `margin` `gutter` `border` `borderColor` |
+| `set` | `id` (or `page`+`panel`) and the fields to change. Any field of that item's type works. Giving only `at` moves it |
+| `remove` | `id` (item or panel), or `page`+`panel` (removes the panel and its effects) |
+| `clear` | `page` `what` (items / images / all) |
 
-コマの画像だけ調整するときは `src` なしの `image`（例: `{"op": "image", "page": 1, "panel": 2, "zoom": 1.4, "focus": [0.5, 0.3]}`）。
+To adjust only a panel's image, use `image` without `src` (e.g. `{"op": "image", "page": 1, "panel": 2, "zoom": 1.4, "focus": [0.5, 0.3]}`).
 
 ```json
 [
@@ -124,56 +126,56 @@ komawari は「コマワリ工房」のコアを切り出したCLIです。JSON�
 ]
 ```
 
-## 吹き出しとセリフ
+## Speech bubbles and dialogue
 
-- 縦書きが既定（`"vertical": false` で横書き）。**1列は8〜10文字以内**で `\n` 改行し、1つの吹き出しは2〜4列までに。長いセリフは吹き出しを分ける
-- 吹き出しの大きさはセリフに合わせて自動。`width`/`height` を指定すると固定になる
-- 1つのコマの中も読み順に置く（右綴じなら先に話す吹き出しを右上、次を左下へ）
-- `tail`: 省略で下向き。`false` でなし。向き `"down"` `"down-left"` `"up-right"` など、または話し手の口元の位置 `[x, y]`（`at` と同じ座標）。`{"to": [x, y], "style": "curve", "bend": 0.4, "width": 0.24}`。`style` は straight / curve / thought（もくもく）
-- `shape`: `ellipse` 通常／`round` 穏やかな会話／`rect` ナレーション／`cloud` 心の声（しっぽは自動でもくもく）／`spike` 叫び／`burst` 驚き／`jagged` 電話・機械音／`wavy` 震え声・恐怖／`urchin` 衝撃。心の声は `"dashed": true` も使える
-- 縦書きでは「!?」「!!」や2桁の数字が1マスに横並びで入る（縦中横）。句読点・カギ括弧・長音・「…」は縦書きの向きになる
-- 効果音は `sfx`（既定は Dela Gothic One、白フチ＋黒フチ、-8°）。`rotate` `scale` で迫力を調整
-- `font`: `antique`（マンガのセリフ用。かなが明朝・漢字がゴシック）`gothic` `mincho` `maru` `ud` `klee` `yusei` `kurenaido` `hachi` `kaisei` `dela` `reggae` `rocknroll` `rampart` `potta` `yuji` `mochiy` `dot`、またはPCのフォント名 `"custom:フォント名"`
+- Vertical text is the default (`"vertical": false` for horizontal). Keep **each column to 8–10 characters or fewer**, breaking lines with `\n`, and keep a bubble to 2–4 columns. Split long lines of dialogue into multiple bubbles
+- Bubble size fits the text automatically. Setting `width`/`height` fixes it
+- Within a panel, also place bubbles in reading order (for rtl, the first speaker's bubble at top-right, the next toward bottom-left)
+- `tail`: points down if omitted. `false` = no tail. A direction such as `"down"` `"down-left"` `"up-right"`, or the speaker's mouth position `[x, y]` (same coordinates as `at`). Full form: `{"to": [x, y], "style": "curve", "bend": 0.4, "width": 0.24}`. `style` is straight / curve / thought (puffy thought-bubble dots)
+- `shape`: `ellipse` normal / `round` calm conversation / `rect` narration / `cloud` inner thoughts (tail becomes thought dots automatically) / `spike` shouting / `burst` surprise / `jagged` phone or machine voice / `wavy` trembling voice or fear / `urchin` shock. Inner thoughts can also use `"dashed": true`
+- In vertical text, "!?", "!!" and two-digit numbers are set side by side in one cell (tate-chu-yoko). Punctuation, brackets, long-vowel marks and "…" are rotated for vertical writing
+- Sound effects use `sfx` (default font Dela Gothic One, white + black outline, -8°). Tune impact with `rotate` and `scale`
+- `font`: `antique` (for manga dialogue: mincho kana with gothic kanji) `gothic` `mincho` `maru` `ud` `klee` `yusei` `kurenaido` `hachi` `kaisei` `dela` `reggae` `rocknroll` `rampart` `potta` `yuji` `mochiy` `dot`, or a system font name as `"custom:FontName"`
 
-## 画像
+## Images
 
-- コマに入れる画像は、既定でコマを埋める大きさ（`fit: "cover"`）で中央に置かれる
-- `zoom`: その大きさに対する倍率（1.5 で寄り）。`focus`: 画像の中で見せたい点（0〜1、例: 顔の位置）。そこがコマの中央（`at` があればその位置）に来て、コマが埋まるように自動で寄せる
-- `mode`: `halftone`（網点。`dot` は網点の間隔px）、`mono`（白黒2値。`threshold` 0〜255）。`gray` `brightness` `contrast`（%）
-- 枠からはみ出す人物などは自由配置（`free: true` か `panel` なし）。透過PNGが向いている
-- 4096pxを超える画像は取り込み時に縮小。同じ画像は1回だけ作品に入る
+- A panel image is centered and sized to fill the panel by default (`fit: "cover"`)
+- `zoom`: multiplier on that size (1.5 = closer). `focus`: the point in the image to show (0–1, e.g. a face position). It is moved to the panel center (or to `at` if given), adjusted automatically so the panel stays filled
+- `mode`: `halftone` (`dot` = dot spacing in px), `mono` (black-and-white threshold; `threshold` 0–255). `gray` `brightness` `contrast` (%)
+- For figures that break out of the panel frame, use free placement (`free: true` or no `panel`). Transparent PNGs work well
+- Images larger than 4096px are downscaled on import. Identical images are stored only once in the project
 
-## 効果（effect）
+## Effects (effect)
 
-既定ではコマいっぱいに置かれ、コマの内側で切り抜かれ（`clip: false` で解除）、吹き出しより下に重なります。一部分だけなら `at` と `size`（数値なら短辺に対する比率、`[幅, 高さ]` ならコマに対する比率）。
+By default an effect fills the panel, is clipped to the panel (`clip: false` to disable), and sits below bubbles. For a partial effect, use `at` and `size` (a number is a ratio of the short side; `[width, height]` is a ratio of the panel).
 
-- `focus`（集中線）: `center`（集中する位置）`inner`（中心の空き 0〜1）`count` `thickness` `jitter` `color` `background`
-- `speed`（流線）: `angle`（線の向き°）`count` `thickness` `minLength` `maxLength`（0〜1）`taper`（one / both）`centerGap` `background`
-- `flash`（ウニフラッシュ）: `inner` `count` `thickness` `minLength` `fill` `color` `strokeWidth`
-- `tone`（スクリーントーン）: `pattern`（dots / grad / lines / cross / solid）`pitch` `density` `density2` `gradientAngle` `angle` `shape`（rect / ellipse）`color`（白で白トーン）
+- `focus` (concentration lines): `center` (focal point) `inner` (empty center, 0–1) `count` `thickness` `jitter` `color` `background`
+- `speed` (speed lines): `angle` (line direction in degrees) `count` `thickness` `minLength` `maxLength` (0–1) `taper` (one / both) `centerGap` `background`
+- `flash` (spiky "uni" flash): `inner` `count` `thickness` `minLength` `fill` `color` `strokeWidth`
+- `tone` (screentone): `pattern` (dots / grad / lines / cross / solid) `pitch` `density` `density2` `gradientAngle` `angle` `shape` (rect / ellipse) `color` (white for white tone)
 
-## 図形（shape）と結合（combine）
+## Shapes (shape) and combining (combine)
 
-四角形・楕円・多角形・星と、頂点を並べた自由な多角形を置けます。既定は白い塗りと黒い線で、吹き出しやテキストより下に重なります（コマの外にはみ出してもよい）。
+You can place rectangles, ellipses, polygons, stars, and free polygons defined by vertices. The default is a white fill with a black stroke, layered below bubbles and text (shapes may extend outside the panel).
 
-- `shape`: `rect`（四角形。`radius` で角の丸み px）`ellipse`（楕円）`polygon`（正多角形。`sides` で角の数）`star`（星。`sides` がトゲの数、`inner` がへこみ 0〜1）
-- 自由な多角形は `points`: `[[x, y], …]`（3点以上。`at` と同じく、コマか基本枠に対する 0〜1）。このとき `shape` は不要
-- 位置は `at` / `xy`。大きさは `size`（数値なら短辺に対する比率で、正方形・正円・正多角形の形のまま。`[幅, 高さ]` ならコマに対する比率）か `width` / `height`（片方だけなら形の比率を保つ）。省略すると短辺の 0.4
-- 塗り: `fill`（色。`"none"` でなし）`pattern`（`solid` のほか `dots` / `grad` / `lines` / `cross` でトーン。模様の色は `fill`）`pitch` `density` `density2` `gradientAngle` `angle`
-- 線: `stroke`（色。`"none"` でなし）`strokeWidth`（px、0 でなし）`line`（solid / dashed / dotted）`join`（角の形: miter / round / bevel）`strokeAlign`（線の位置: center / inside / outside）
-- `rotate` `opacity` `clip`（コマの内側だけに表示）`locked` `hidden`。`set` で同じ項目を変えられる（`points` で形ごと置き換え）
+- `shape`: `rect` (rectangle; `radius` = corner radius in px) `ellipse` `polygon` (regular polygon; `sides` = number of corners) `star` (`sides` = number of points, `inner` = indentation 0–1)
+- Free polygon via `points`: `[[x, y], …]` (3 or more; 0–1 relative to the panel or live area, like `at`). `shape` is not needed then
+- Position with `at` / `xy`. Size with `size` (a number is a ratio of the short side and keeps a square / circle / regular shape; `[width, height]` is a ratio of the panel) or `width` / `height` (giving only one keeps the aspect ratio). Default is 0.4 of the short side
+- Fill: `fill` (color; `"none"` for no fill) `pattern` (`solid`, or `dots` / `grad` / `lines` / `cross` for tone; pattern color is `fill`) `pitch` `density` `density2` `gradientAngle` `angle`
+- Stroke: `stroke` (color; `"none"` for none) `strokeWidth` (px; 0 for none) `line` (solid / dashed / dotted) `join` (corner style: miter / round / bevel) `strokeAlign` (stroke position: center / inside / outside)
+- `rotate` `opacity` `clip` (show only inside the panel) `locked` `hidden`. The same fields can be changed with `set` (`points` replaces the whole shape)
 
-`combine` は `ids` の図形（2つ以上、重なり順は自動）を次のように1つにします。元の図形は消え、できた図形の id が `results` に返ります（`id` で名前を付けてもよく、結合する図形の id も使える）。
+`combine` merges the shapes in `ids` (two or more; stacking order is handled automatically) into one, as below. The original shapes are removed and the new shape's id is returned in `results` (you can name it with `id`, and may reuse an id of one of the combined shapes).
 
-| `mode` | 結果 |
+| `mode` | Result |
 |---|---|
-| `union`（合体） | 重ねた図形を1つにまとめる |
-| `subtract`（型抜き） | いちばん後ろ（先に置いた）図形から、ほかの図形の形をくり抜く |
-| `intersect`（交差） | すべてが重なっている部分だけを残す |
-| `exclude`（中マド） | 重なっている部分をくり抜く |
-| `fragment`（分割） | 重なりの境目でばらばらの図形に分ける（`ids` は複数、`id` は使えない）。図形1つだけなら、離れた部分を別々の図形にする |
+| `union` | Merge the overlapping shapes into one |
+| `subtract` | Cut the other shapes out of the backmost (first placed) shape |
+| `intersect` | Keep only the area where all shapes overlap |
+| `exclude` | Cut out the overlapping areas |
+| `fragment` | Split into separate shapes along the overlap boundaries (`ids` may be several; `id` cannot be used). With a single shape, its disconnected parts become separate shapes |
 
-結果はいちばん後ろの図形の塗り・線と重なり順を引き継ぎます（`fragment` は、各部分でいちばん前にあった図形の見た目）。spec ではページの `combine` に同じ形で書きます。
+The result inherits the fill, stroke and stacking position of the backmost shape (for `fragment`, each piece takes the look of the frontmost shape covering it). In a spec, write the same objects in the page's `combine`.
 
 ```json
 {
@@ -187,15 +189,17 @@ komawari は「コマワリ工房」のコアを切り出したCLIです。JSON�
 }
 ```
 
-## フォント
+## Fonts
 
-`komawari fonts` で各フォントが何で描かれるかを確認できます。Windows / macOS ではOSの游ゴシック・游明朝・ヒラギノが使われます。Webフォント（`dela` `maru` など）や日本語フォントのないLinuxでは `komawari fonts fetch base dela`（全部は `all`）で Google Fonts から `~/.komawari/fonts` に取得します（`KOMAWARI_FONT_DIR` で場所を変更）。手持ちのフォントは `fonts add <ttf> --project <file>` で作品に埋め込み、`"font": "custom:名前"` で使えます。
+`komawari fonts` shows what each font is rendered with. On Windows / macOS the OS fonts Yu Gothic, Yu Mincho and Hiragino are used. For web fonts (`dela`, `maru`, etc.) or on Linux without Japanese fonts, run `komawari fonts fetch base dela` (`all` for everything) to download them from Google Fonts into `~/.komawari/fonts` (change the location with `KOMAWARI_FONT_DIR`). Embed your own fonts into a project with `fonts add <ttf> --project <file>` and use them via `"font": "custom:name"`.
 
-## よくあるエラー
+## Common errors
 
-- `ページ1にコマ 6 はありません（5コマ）` → コマ割りのコマ数と `panels` の数が合っていない。`templates` でコマ数を確認する
-- `bubble に「tial」という項目はありません／もしかして「tail」？` → 項目名の誤り。`komawari schema` に全項目がある
-- `画像ファイルがありません` → パスは spec / ops ファイルのある場所から相対
-- 警告「〜が重なっています」→ `set` で `at` を動かすか、文字を減らす
-- `id「e1」はすでに使われています` → 自動で付く id（吹き出し `b1`、テキスト `t1`、効果音 `s1`、効果 `e1`、画像 `i1`、図形 `sh1` …）と重なっている。別の名前にする
-- `交差の結果が空です` → `combine` の図形どうしが重なっていない。`info` の `box` で位置と大きさを確かめる
+Messages are printed in Japanese; the patterns below are what you will see.
+
+- `ページ1にコマ 6 はありません（5コマ）` ("page 1 has no panel 6 (5 panels)") → the layout's panel count does not match the number of `panels`. Check panel counts with `templates`
+- `bubble に「tial」という項目はありません` / `もしかして「tail」？` ("bubble has no field 'tial'" / "did you mean 'tail'?") → misspelled field name. `komawari schema` lists every field
+- `画像ファイルがありません` ("image file not found") → paths are relative to the spec / ops file
+- Warning `〜が重なっています` ("… overlap") → move one with `set` and `at`, or shorten the text
+- `id「e1」はすでに使われています` ("id 'e1' is already in use") → clashes with an auto-assigned id (bubble `b1`, text `t1`, sfx `s1`, effect `e1`, image `i1`, shape `sh1`, …). Use a different name
+- `交差の結果が空です` ("the intersection is empty") → the shapes in `combine` do not overlap. Check positions and sizes via `box` in `info`
