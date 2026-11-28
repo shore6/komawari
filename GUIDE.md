@@ -1,6 +1,6 @@
 # komawari ガイド（LLM・エージェント向け）
 
-komawari は「コマワリ工房」のコアを切り出したCLIです。JSONでマンガのページ（コマ割り・画像・吹き出し・効果音・効果線・トーン）を組み立て、PNG / JPEG / WebP に好きな解像度で書き出します。作品ファイル（`.manga.json`）はWebアプリ版コマワリ工房でそのまま開いて手直しできます。
+komawari は「コマワリ工房」のコアを切り出したCLIです。JSONでマンガのページ（コマ割り・画像・吹き出し・効果音・効果線・トーン・図形）を組み立て、PNG / JPEG / WebP に好きな解像度で書き出します。作品ファイル（`.manga.json`）はWebアプリ版コマワリ工房でそのまま開いて手直しできます。
 
 出力はすべて1つのJSONです。`"ok": false` のときは `error` と `hint`（複数あれば `details`）を読んで直してください。`warnings` には重なり・はみ出し・長すぎる列・足りないフォントが出ます。
 
@@ -76,9 +76,9 @@ komawari は「コマワリ工房」のコアを切り出したCLIです。JSON�
 }
 ```
 
-- トップ: `title` `size` `direction`（rtl / ltr）`margin`（px、数値か `[上下, 左右]` か `[上, 右, 下, 左]`）`gutter`（px、数値か `[左右の間, 上下の間]`）`border` `borderColor` `defaults`（`bubble` / `text` / `sfx` / `effect` ごとの既定値）`pages`
-- ページ: `layout` `background` `panels`（読み順。`null` で飛ばす）`items`（`type` 付きの自由配置。`at` は基本枠に対する比率）
-- コマ: `image`（パス文字列か画像の操作）`fill` `border`（0 で枠なし、null で標準）`borderColor` `effects` `bubbles` `texts` `sfx` `items`
+- トップ: `title` `size` `direction`（rtl / ltr）`margin`（px、数値か `[上下, 左右]` か `[上, 右, 下, 左]`）`gutter`（px、数値か `[左右の間, 上下の間]`）`border` `borderColor` `defaults`（`bubble` / `text` / `sfx` / `effect` / `shape` ごとの既定値）`pages`
+- ページ: `layout` `background` `panels`（読み順。`null` で飛ばす）`items`（`type` 付きの自由配置。`at` は基本枠に対する比率）`combine`（図形の結合。下の「図形」を参照）
+- コマ: `image`（パス文字列か画像の操作）`fill` `border`（0 で枠なし、null で標準）`borderColor` `effects` `shapes` `bubbles` `texts` `sfx` `items`
 - 画像パスは spec ファイルのある場所から相対。2ページ目以降で `layout` を省くと前のページと同じコマ割りになる
 - 中身は下の操作と同じ項目で書ける（`page` と `panel` は自動で入る）
 
@@ -99,6 +99,8 @@ komawari は「コマワリ工房」のコアを切り出したCLIです。JSON�
 | `sfx` | `text` の効果音向け既定（極太・二重フチ・少し傾き）。項目は `text` と同じ |
 | `image` | `src` か `asset`、`page` `panel` `fit`（cover / contain）`zoom` `focus` `at` `rotate` `flipX` `flipY` `gray` `brightness` `contrast` `mode`（normal / mono / halftone）`threshold` `dot`。`free: true` か `panel` なしで自由配置（`width` / `height` / `rotate` / `clip`） |
 | `effect` | `kind`（focus / speed / flash / tone、必須）`page` `panel` `at`+`size` ほか下記 |
+| `shape` | `shape`（rect / ellipse / polygon / star）か `points`（自由な多角形）、`page` `panel` `at`/`xy` `size` `width` `height` `fill` `stroke` `strokeWidth` ほか下記 |
+| `combine` | `ids`（図形の id、必須）`mode`（union / subtract / intersect / exclude / fragment、既定は union）`id` |
 | `layout` | `page` と `template` / `rows` / `cuts` のどれか。画像は読み順で新しいコマへ引き継がれる |
 | `split` | `page` `panel` `dir`（h=上下に分ける横線 / v=左右に分ける縦線）`at`（0〜1、既定0.5）`angle`（傾き°） |
 | `panel` | `page` `panel` `fill` `border` `borderColor` |
@@ -150,6 +152,41 @@ komawari は「コマワリ工房」のコアを切り出したCLIです。JSON�
 - `flash`（ウニフラッシュ）: `inner` `count` `thickness` `minLength` `fill` `color` `strokeWidth`
 - `tone`（スクリーントーン）: `pattern`（dots / grad / lines / cross / solid）`pitch` `density` `density2` `gradientAngle` `angle` `shape`（rect / ellipse）`color`（白で白トーン）
 
+## 図形（shape）と結合（combine）
+
+四角形・楕円・多角形・星と、頂点を並べた自由な多角形を置けます。既定は白い塗りと黒い線で、吹き出しやテキストより下に重なります（コマの外にはみ出してもよい）。
+
+- `shape`: `rect`（四角形。`radius` で角の丸み px）`ellipse`（楕円）`polygon`（正多角形。`sides` で角の数）`star`（星。`sides` がトゲの数、`inner` がへこみ 0〜1）
+- 自由な多角形は `points`: `[[x, y], …]`（3点以上。`at` と同じく、コマか基本枠に対する 0〜1）。このとき `shape` は不要
+- 位置は `at` / `xy`。大きさは `size`（数値なら短辺に対する比率で、正方形・正円・正多角形の形のまま。`[幅, 高さ]` ならコマに対する比率）か `width` / `height`（片方だけなら形の比率を保つ）。省略すると短辺の 0.4
+- 塗り: `fill`（色。`"none"` でなし）`pattern`（`solid` のほか `dots` / `grad` / `lines` / `cross` でトーン。模様の色は `fill`）`pitch` `density` `density2` `gradientAngle` `angle`
+- 線: `stroke`（色。`"none"` でなし）`strokeWidth`（px、0 でなし）`line`（solid / dashed / dotted）`join`（角の形: miter / round / bevel）`strokeAlign`（線の位置: center / inside / outside）
+- `rotate` `opacity` `clip`（コマの内側だけに表示）`locked` `hidden`。`set` で同じ項目を変えられる（`points` で形ごと置き換え）
+
+`combine` は `ids` の図形（2つ以上、重なり順は自動）を次のように1つにします。元の図形は消え、できた図形の id が `results` に返ります（`id` で名前を付けてもよく、結合する図形の id も使える）。
+
+| `mode` | 結果 |
+|---|---|
+| `union`（合体） | 重ねた図形を1つにまとめる |
+| `subtract`（型抜き） | いちばん後ろ（先に置いた）図形から、ほかの図形の形をくり抜く |
+| `intersect`（交差） | すべてが重なっている部分だけを残す |
+| `exclude`（中マド） | 重なっている部分をくり抜く |
+| `fragment`（分割） | 重なりの境目でばらばらの図形に分ける（`ids` は複数、`id` は使えない）。図形1つだけなら、離れた部分を別々の図形にする |
+
+結果はいちばん後ろの図形の塗り・線と重なり順を引き継ぎます（`fragment` は、各部分でいちばん前にあった図形の見た目）。spec ではページの `combine` に同じ形で書きます。
+
+```json
+{
+  "layout": "basic-5",
+  "panels": [
+    { "shapes": [
+        { "id": "full", "shape": "ellipse", "at": [0.4, 0.5], "size": 0.6, "fill": "#ffe066" },
+        { "id": "bite", "shape": "ellipse", "at": [0.58, 0.42], "size": 0.55 } ] }
+  ],
+  "combine": [{ "ids": ["full", "bite"], "mode": "subtract", "id": "moon" }]
+}
+```
+
 ## フォント
 
 `komawari fonts` で各フォントが何で描かれるかを確認できます。Windows / macOS ではOSの游ゴシック・游明朝・ヒラギノが使われます。Webフォント（`dela` `maru` など）や日本語フォントのないLinuxでは `komawari fonts fetch base dela`（全部は `all`）で Google Fonts から `~/.komawari/fonts` に取得します（`KOMAWARI_FONT_DIR` で場所を変更）。手持ちのフォントは `fonts add <ttf> --project <file>` で作品に埋め込み、`"font": "custom:名前"` で使えます。
@@ -160,3 +197,5 @@ komawari は「コマワリ工房」のコアを切り出したCLIです。JSON�
 - `bubble に「tial」という項目はありません／もしかして「tail」？` → 項目名の誤り。`komawari schema` に全項目がある
 - `画像ファイルがありません` → パスは spec / ops ファイルのある場所から相対
 - 警告「〜が重なっています」→ `set` で `at` を動かすか、文字を減らす
+- `id「e1」はすでに使われています` → 自動で付く id（吹き出し `b1`、テキスト `t1`、効果音 `s1`、効果 `e1`、画像 `i1`、図形 `sh1` …）と重なっている。別の名前にする
+- `交差の結果が空です` → `combine` の図形どうしが重なっていない。`info` の `box` で位置と大きさを確かめる

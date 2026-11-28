@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "node scripts/build.js",
-    "test": "node test/smoke.js"
+    "test": "node test/geometry.js && node test/smoke.js"
   },
   "dependencies": {
     "@napi-rs/canvas": "1.2.0"

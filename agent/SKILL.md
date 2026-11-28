@@ -1,6 +1,6 @@
 ---
 name: komawari
-description: Make or edit manga pages (panel layouts, images in panels, Japanese speech bubbles, sound effects, speed/focus lines, screentone) and export them as images with the komawari CLI. Use when asked to create a manga/comic page, storyboard, or 4-koma from images or a script.
+description: Make or edit manga pages (panel layouts, images in panels, Japanese speech bubbles, sound effects, speed/focus lines, screentone, shapes that can be merged or cut out) and export them as images with the komawari CLI. Use when asked to create a manga/comic page, storyboard, or 4-koma from images or a script.
 ---
 
 # komawari でマンガのページを作る
